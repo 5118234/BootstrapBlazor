@@ -319,89 +319,15 @@
     /* Safari and Chrome */
     -o-animation: progress 15s ease;
     /* Opera */
-    animation: progress 15s ease;
+    animation: progress 15s ease infinite;
 }
 
 @keyframes progress {
-    0% {
-        left: -24vw;
-    }
-
-    10% {
-        left: -20vw;
-    }
-
-    30% {
-        left: -16vw;
-    }
-
-    50% {
-        left: -12vw;
-    }
-
-    65% {
-        left: -10vw;
-    }
-
-    80% {
-        left: -4vw;
-    }
-
-    100% {
-        left: 0;
-    }
-}
-
-@keyframes progress {
-    0% {
+    0%, 100% {
         width: 0%;
     }
 
     50% {
         width: 100%;
-    }
-
-    100% {
-        width: 0;
-    }
-}
-
-.fade-in {
-    animation: fade-in 2s ease;
-    -moz-animation: fade-in 2s ease;
-    /* Firefox */
-    -webkit-animation: fade-in 2s ease;
-    /* Safari and Chrome */
-    -o-animation: fade-in 2s ease;
-    /* Opera */
-}
-
-@keyframes fade-in {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
-}
-
-.out {
-    animation: out 2s 15s ease;
-    -moz-animation: out 2s 15s ease;
-    /* Firefox */
-    -webkit-animation: out 2s 15s ease;
-    /* Safari and Chrome */
-    -o-animation: out 2s 15s ease;
-    /* Opera */
-}
-
-@keyframes out {
-    from {
-        opacity: 1;
-    }
-
-    to {
-        opacity: 0;
     }
 }
