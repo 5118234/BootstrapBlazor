@@ -26,7 +26,7 @@ namespace BootstrapBlazor.Components
         /// <returns></returns>
         public void Show(ToastOption option)
         {
-            Subscribes.AsParallel().ForAll(callback => callback.Invoke(option));
+            Subscribes.ForEach(callback => callback.Invoke(option));
         }
 
         /// <summary>

@@ -26,7 +26,7 @@ namespace BootstrapBlazor.Components
         /// <returns></returns>
         public void Show(MessageOption option)
         {
-            Subscribes.AsParallel().ForAll(callback => callback.Invoke(option));
+            Subscribes.ForEach(callback => callback.Invoke(option));
         }
 
         /// <summary>
