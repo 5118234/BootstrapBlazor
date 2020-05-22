@@ -33,6 +33,14 @@
                     }, 1000);
                 }
             });
+        },
+        loading: function () {
+            var $loader = $("#loading").addClass("is-done");
+            var handler = window.setTimeout(function () {
+                window.clearTimeout(handler);
+                $loader.remove();
+                $('body').removeClass('overflow-hidden');
+            }, 600);
         }
     });
 

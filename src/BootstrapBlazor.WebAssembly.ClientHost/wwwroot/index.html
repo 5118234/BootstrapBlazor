@@ -10,10 +10,30 @@
     <link href="lib/chartjs/Chart.css" rel="stylesheet" />
     <link href="lib/highlight/vs.css" rel="stylesheet">
     <link href="_content/BootstrapBlazor/css/bootstrap.blazor.css" rel="stylesheet" />
-    <link href="css/site.css" rel="stylesheet" asp-append-version="true" />
+    <link href="css/site.css" rel="stylesheet" />
+    <link href="style/loading.css" rel="stylesheet" />
 </head>
-<body>
-    <app>Loading...</app>
+<body class="overflow-hidden">
+    <app></app>
+
+    <div class="out" id="loading">
+        <div class="fade-in">
+            <div class="container">
+                <div class="one common"></div>
+                <div class="two common"></div>
+                <div class="three common"></div>
+                <div class="four common"></div>
+                <div class="five common"></div>
+                <div class="six common"></div>
+                <div class="seven common"></div>
+                <div class="eight common"></div>
+            </div>
+            <div class="intro">精彩即将打开</div>
+            <div class="bar">
+                <div class="progress"></div>
+            </div>
+        </div>
+    </div>
 
     <div id="blazor-error-ui">
         <environment include="Staging,Production">
