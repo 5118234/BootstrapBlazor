@@ -1,19 +1,47 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />
+    <meta content="bootstrap,blazor,wasm,webassembly,UI,netcore,web,assembly" name="Keywords">
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="favicon.png" />
     <title>Bootstrap Blazor 演示网站</title>
     <base href="/" />
+    <link href="style/loading.css" rel="stylesheet" />
     <link href="lib/twitter-bootstrap/css/bootstrap.css" rel="stylesheet" />
     <link href="lib/font-awesome/css/font-awesome.css" rel="stylesheet" />
     <link href="lib/chartjs/Chart.css" rel="stylesheet" />
     <link href="lib/highlight/vs.css" rel="stylesheet">
     <link href="_content/BootstrapBlazor/css/bootstrap.blazor.css" rel="stylesheet" />
-    <link href="css/site.css" rel="stylesheet" asp-append-version="true" />
+    <link href="css/site.css" rel="stylesheet" />
 </head>
-<body>
-    <app>Loading...</app>
+
+<body class="overflow-hidden">
+    <app></app>
+
+    <div class="loader" id="loading">
+        <div class="logo">
+            <div class="one common"></div>
+            <div class="two common"></div>
+            <div class="three common"></div>
+            <div class="four common"></div>
+            <div class="five common"></div>
+            <div class="six common"></div>
+            <div class="seven common"></div>
+            <div class="eight common"></div>
+        </div>
+        <div class="intro">
+            <img src="images/brand.png" />
+            <span>精彩即将呈现</span>
+        </div>
+        <div class="bar">
+            <div class="progress"></div>
+        </div>
+    </div>
 
     <div id="blazor-error-ui">
         <environment include="Staging,Production">
@@ -34,4 +62,5 @@
     <script src="_content/BootstrapBlazor/js/bootstrap.blazor.js"></script>
     <script src="js/common.js"></script>
 </body>
+
 </html>
