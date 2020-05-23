@@ -19,12 +19,20 @@
     <ItemGroup>
         <WwwrootFiles Include="$(MSBuildThisFileDirectory)..\BootstrapBlazor.Server\wwwroot\**\*.*" />
         <WwwrootUnixFiles Include="$(MSBuildThisFileDirectory)../BootstrapBlazor.Server/wwwroot/**/*.*" />
+        <distFiles Include="$(TargetDir)publish\wwwroot\**\*.*" />
+        <distUnixFiles Include="$(TargetDir)publish\wwwroot/**/*.*" />
     </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <Message Text="Copy wwwroot -> $(ProjectDir)" Importance="high" />
+        <Message Text="Copy -&gt; $(ProjectDir)wwwroot" Importance="high" />
         <Copy Condition="'$(OS)' == 'Windows_NT'" SourceFiles="@(WwwrootFiles)" DestinationFolder="$(ProjectDir)\wwwroot\%(RecursiveDir)" SkipUnchangedFiles="true" />
         <Copy Condition="'$(OS)' == 'UNIX'" SourceFiles="@(WwwrootUnixFiles)" DestinationFolder="$(ProjectDir)/wwwroot/%(RecursiveDir)" SkipUnchangedFiles="true" />
+    </Target>
+
+    <Target Name="PostPublish" AfterTargets="Publish">
+        <Message Text="Publish -&gt; $(TargetDir)publish\wwwroot" Importance="high" />
+        <Copy Condition="'$(OS)' == 'Windows_NT'" SourceFiles="@(distFiles)" DestinationFolder="$(MSBuildThisFileDirectory)..\..\dist\%(RecursiveDir)" SkipUnchangedFiles="true" />
+        <Copy Condition="'$(OS)' == 'UNIX'" SourceFiles="@(distUnixFiles)" DestinationFolder="$(MSBuildThisFileDirectory)../../dist/%(RecursiveDir)" SkipUnchangedFiles="true" />
     </Target>
 
 </Project>
