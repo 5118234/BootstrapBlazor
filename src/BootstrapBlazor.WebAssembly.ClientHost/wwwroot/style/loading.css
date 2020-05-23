@@ -43,6 +43,27 @@
     margin-bottom: 3rem;
 }
 
+    .intro img {
+        border-radius: 3px;
+        width: 44px;
+        margin-right: 1rem;
+    }
+
+    .intro span {
+        color: #fff;
+        animation: title 3s linear infinite;
+    }
+
+@keyframes title {
+    0%, 100% {
+        color: #fff;
+    }
+
+    60% {
+        color: #666;
+    }
+}
+
 .one {
     transform: rotate(45deg);
     left: 0;
@@ -110,22 +131,14 @@
 .bar {
     width: 50%;
     height: .25vw;
-    left: 0;
-    right: 0;
-    top: 16vw;
-    bottom: 0;
     margin: auto;
     overflow: hidden;
     background: #E645D0;
 }
 
 .progress {
-    width: 1%;
+    width: 0%;
     height: .5vw;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
     margin: auto;
     overflow: hidden;
     background: #17E1E6;
@@ -312,22 +325,24 @@
 }
 
 .progress {
-    animation: progress 15s ease;
-    -moz-animation: progress 15s ease;
+    animation: progress 12s linear;
+    -moz-animation: progress 12s linear;
     /* Firefox */
-    -webkit-animation: progress 15s ease;
+    -webkit-animation: progress 12s linear;
     /* Safari and Chrome */
-    -o-animation: progress 15s ease;
+    -o-animation: progress 12s linear;
     /* Opera */
-    animation: progress 15s ease infinite;
+    animation: progress 12s linear infinite;
 }
 
 @keyframes progress {
     0%, 100% {
         width: 0%;
+        background-color: #17e1e6;
     }
 
     50% {
         width: 100%;
+        background-color: #28a745;
     }
 }
