@@ -50,6 +50,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BootstrapBlazor.WebAssembly
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BootstrapBlazor.WebAssembly.ServerHost", "src\BootstrapBlazor.WebAssembly.ServerHost\BootstrapBlazor.WebAssembly.ServerHost.csproj", "{3AC7445D-0E89-4AF4-BB2B-89B5CF51F13D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dist", "dist", "{63E887C6-4610-4ED3-91F4-62EFDE7F442F}"
+	ProjectSection(SolutionItems) = preProject
+		dist\.gitattributes = dist\.gitattributes
+		dist\.nojekyll = dist\.nojekyll
+		dist\.spa = dist\.spa
+		dist\404.html = dist\404.html
+		dist\index.html = dist\index.html
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

@@ -17,14 +17,19 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Favicons Include="$(MSBuildThisFileDirectory)..\BootstrapBlazor.Server\wwwroot\favicon.*" />
-        <FaviconsUnixFiles Include="$(MSBuildThisFileDirectory)../BootstrapBlazor.Server/wwwroot/favicon.*" />
+      <Content Include="..\BootstrapBlazor.Server\wwwroot\favicon.ico" Link="wwwroot\favicon.ico" />
+      <Content Include="..\BootstrapBlazor.Server\wwwroot\favicon.png" Link="wwwroot\favicon.png" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <distFiles Include="$(TargetDir)publish\wwwroot\**\*.*" />
+        <distUnixFiles Include="$(TargetDir)publish\wwwroot/**/*.*" />
     </ItemGroup>
 
-    <Target Name="PreBuild" AfterTargets="PreBuildEvent">
-        <Message Text="Copy favicon -&gt; $(ProjectDir)" Importance="high" />
-        <Copy Condition="'$(OS)' == 'Windows_NT'" SourceFiles="@(Favicons)" DestinationFolder="$(ProjectDir)\wwwroot\" SkipUnchangedFiles="true" />
-        <Copy Condition="'$(OS)' == 'UNIX'" SourceFiles="@(FaviconsUnixFiles)" DestinationFolder="$(ProjectDir)/wwwroot/" SkipUnchangedFiles="true" />
+    <Target Name="PostPublish" AfterTargets="Publish">
+        <Message Text="Publish -&gt; $(TargetDir)" Importance="high" />
+        <Copy Condition="'$(OS)' == 'Windows_NT'" SourceFiles="@(distFiles)" DestinationFolder="$(SolutionDir)\dist\%(RecursiveDir)" SkipUnchangedFiles="true" />
+        <Copy Condition="'$(OS)' == 'UNIX'" SourceFiles="@(distUnixFiles)" DestinationFolder="$(SolutionDir)/dist/%(RecursiveDir)" SkipUnchangedFiles="true" />
     </Target>
-    
+
 </Project>
