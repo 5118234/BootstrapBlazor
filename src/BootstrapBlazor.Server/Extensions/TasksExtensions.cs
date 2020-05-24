@@ -48,7 +48,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns></returns>
         protected override Task ExecuteAsync(CancellationToken stoppingToken) => Task.Run(() =>
         {
-            TaskServicesManager.GetOrAdd("清除文件", token =>
+            TaskServicesManager.GetOrAdd("Clear Upload Files", token =>
             {
                 if (_env != null)
                 {

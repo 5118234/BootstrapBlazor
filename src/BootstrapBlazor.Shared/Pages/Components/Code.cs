@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
-using System.Threading.Tasks;
 
 namespace BootstrapBlazor.Shared.Pages.Components
 {
@@ -15,12 +13,6 @@ namespace BootstrapBlazor.Shared.Pages.Components
         /// 
         /// </summary>
         private ElementReference CodeElement { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        [Inject]
-        private IDemoCode? DemoCodeService { get; set; }
 
         /// <summary>
         /// 
@@ -46,9 +38,7 @@ namespace BootstrapBlazor.Shared.Pages.Components
         /// <param name="firstRender"></param>
         protected override void OnAfterRender(bool firstRender)
         {
-            base.OnAfterRender(firstRender);
-
-            JSRuntime.InvokeVoidAsync("$.highlight", CodeElement);
+            JSRuntime.InvokeVoidAsync("$.highlight", CodeElement, CodeFile);
         }
 
         /// <summary>
@@ -62,18 +52,7 @@ namespace BootstrapBlazor.Shared.Pages.Components
             builder.OpenElement(index++, "code");
             builder.AddElementReferenceCapture(index, el => CodeElement = el);
             if (string.IsNullOrEmpty(CodeFile)) builder.AddContent(index++, ChildContent);
-            else builder.AddContent(index++, Content());
             builder.CloseElement();
-        }
-
-        private string Content()
-        {
-            var ret = "";
-            if (!string.IsNullOrEmpty(CodeFile) && DemoCodeService != null)
-            {
-                ret = DemoCodeService.ReadCode(CodeFile).GetAwaiter().GetResult();
-            }
-            return ret;
         }
     }
 }

@@ -42,12 +42,10 @@ namespace BootstrapBlazor.Server
         {
             services.AddControllers();
             services.AddRazorPages();
-            services.AddServerSideBlazor().AddCircuitOptions(options =>
-            {
-                if (Enviroment.IsDevelopment()) options.DetailedErrors = true;
-            });
+            services.AddServerSideBlazor();
+
+            // 增加 BootstrapBlazor 组件
             services.AddBootstrapBlazor();
-            services.AddDemoCode();
             services.AddBlazorBackgroundTask();
         }
 
@@ -70,7 +68,6 @@ namespace BootstrapBlazor.Server
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             app.UseRouting();

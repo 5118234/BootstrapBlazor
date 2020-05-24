@@ -4,9 +4,19 @@
             var $toast = $('.row .toast').toast('show');
             $toast.find('.toast-progress').css({ "width": "100%" });
         },
-        highlight: function (code) {
-            hljs.highlightBlock(code);
-            $el = $(code).parent().parent().find('[data-toggle="tooltip"]').tooltip();
+        highlight: function (el, fileName) {
+            var $el = $(el);
+            $el.parent().parent().find('[data-toggle="tooltip"]').tooltip();
+            if (fileName) {
+                var url = '_content/BootstrapBlazor.Shared/code/' + fileName;
+                $.get(url, function (result) {
+                    $el.text(result);
+                    hljs.highlightBlock(el);
+                });
+            }
+            else {
+                hljs.highlightBlock(el);
+            }
         },
         copyText: function (ele) {
             if (typeof ele !== "string") return false;

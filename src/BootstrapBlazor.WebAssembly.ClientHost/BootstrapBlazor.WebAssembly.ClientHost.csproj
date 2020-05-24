@@ -17,14 +17,14 @@
     </ItemGroup>
 
     <ItemGroup>
-        <WwwrootFiles Include="$(MSBuildThisFileDirectory)..\BootstrapBlazor.Server\wwwroot\**\*.*" />
-        <WwwrootUnixFiles Include="$(MSBuildThisFileDirectory)../BootstrapBlazor.Server/wwwroot/**/*.*" />
+        <Favicons Include="$(MSBuildThisFileDirectory)..\BootstrapBlazor.Server\wwwroot\favicon.*" />
+        <FaviconsUnixFiles Include="$(MSBuildThisFileDirectory)../BootstrapBlazor.Server/wwwroot/favicon.*" />
     </ItemGroup>
 
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <Message Text="Copy wwwroot -> $(ProjectDir)" Importance="high" />
-        <Copy Condition="'$(OS)' == 'Windows_NT'" SourceFiles="@(WwwrootFiles)" DestinationFolder="$(ProjectDir)\wwwroot\%(RecursiveDir)" SkipUnchangedFiles="true" />
-        <Copy Condition="'$(OS)' == 'UNIX'" SourceFiles="@(WwwrootUnixFiles)" DestinationFolder="$(ProjectDir)/wwwroot/%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <Target Name="PreBuild" AfterTargets="PreBuildEvent">
+        <Message Text="Copy favicon -&gt; $(ProjectDir)" Importance="high" />
+        <Copy Condition="'$(OS)' == 'Windows_NT'" SourceFiles="@(Favicons)" DestinationFolder="$(ProjectDir)\wwwroot\" SkipUnchangedFiles="true" />
+        <Copy Condition="'$(OS)' == 'UNIX'" SourceFiles="@(FaviconsUnixFiles)" DestinationFolder="$(ProjectDir)/wwwroot/" SkipUnchangedFiles="true" />
     </Target>
-
+    
 </Project>

@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace BootstrapBlazor.WebAssembly.ClientHost
@@ -22,11 +20,8 @@ namespace BootstrapBlazor.WebAssembly.ClientHost
 
             builder.RootComponents.Add<App>("app");
 
-            builder.Services.AddTransient(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-
+            // 增加 BootstrapBlazor 组件
             builder.Services.AddBootstrapBlazor();
-
-            builder.Services.AddDemoCode();
 
             await builder.Build().RunAsync();
         }

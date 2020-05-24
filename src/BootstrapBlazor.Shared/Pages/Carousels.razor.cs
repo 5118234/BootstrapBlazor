@@ -10,9 +10,9 @@ namespace BootstrapBlazor.Shared.Pages
     {
         private IEnumerable<string> Images => new List<string>()
         {
-            "images/Pic0.jpg",
-            "images/Pic1.jpg",
-            "images/Pic2.jpg"
+            "_content/BootstrapBlazor.Shared/images/Pic0.jpg",
+            "_content/BootstrapBlazor.Shared/images/Pic1.jpg",
+            "_content/BootstrapBlazor.Shared/images/Pic2.jpg"
         };
 
         /// <summary>
