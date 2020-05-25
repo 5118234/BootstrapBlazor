@@ -84,35 +84,32 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// OnInput 方法
         /// </summary>
-        protected void OnInput(ChangeEventArgs args)
+        protected async Task OnInput(ChangeEventArgs args)
         {
-            CurrentValueAsString = Convert.ToString(args.Value) ?? "";
-            _isLoading = true;
-            Task.Run(() =>
+            if (!_isLoading)
             {
+                _isLoading = true;
+                CurrentValueAsString = Convert.ToString(args.Value) ?? "";
                 OnValueChanged?.Invoke(CurrentValueAsString);
-                _isLoading = false;
                 _isShown = true;
-                InvokeAsync(StateHasChanged);
-            });
+                _isLoading = false;
+                await InvokeAsync(StateHasChanged);
+            }
         }
 
         /// <summary>
         /// OnBlur 方法
         /// </summary>
-        protected void OnBlur()
+        protected Task OnBlur() => InvokeAsync(async () =>
         {
-            InvokeAsync(async () =>
+            await Task.Delay(100);
+            if (!_itemTrigger)
             {
-                await Task.Delay(100);
-                if (!_itemTrigger)
-                {
-                    _isShown = false;
-                    _itemTrigger = false;
-                    StateHasChanged();
-                }
-            });
-        }
+                _isShown = false;
+                _itemTrigger = false;
+                StateHasChanged();
+            }
+        });
 
         private bool _itemTrigger;
 
