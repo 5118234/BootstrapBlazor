@@ -1,6 +1,7 @@
 ﻿using BootstrapBlazor.Shared.Common;
 using BootstrapBlazor.Shared.Pages.Components;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace BootstrapBlazor.Shared.Pages
 {
@@ -26,10 +27,11 @@ namespace BootstrapBlazor.Shared.Pages
         /// <summary>
         /// 
         /// </summary>
-        private void OnConfirm()
+        private Task OnConfirm()
         {
             // 点击确认按钮后此方法被回调，点击取消按钮时此方法不会被调用
             Trace?.Log("OnConfirm Trigger");
+            return Task.CompletedTask;
         }
 
         /// <summary>

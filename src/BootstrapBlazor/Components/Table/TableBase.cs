@@ -98,16 +98,16 @@ namespace BootstrapBlazor.Components
             }
 
             // 设置 OnSort 回调方法
-            OnSort = new Action<string, SortOrder>((sortName, sortOrder) =>
+            OnSort = new Action<string, SortOrder>(async (sortName, sortOrder) =>
             {
                 (SortName, SortOrder) = (sortName, sortOrder);
-                Query();
+                await QueryAsync();
             });
 
             // 如果未设置 Items 数据源 自动执行查询方法
             if (Items == null)
             {
-                QueryData();
+                await QueryData();
                 if (Items == null) Items = new TItem[0];
             }
         }

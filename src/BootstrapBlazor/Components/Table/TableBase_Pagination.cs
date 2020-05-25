@@ -49,24 +49,24 @@ namespace BootstrapBlazor.Components
         /// </summary>
         /// <param name="pageIndex"></param>
         /// <param name="pageItems"></param>
-        protected void OnPageClick(int pageIndex, int pageItems)
+        protected async Task OnPageClick(int pageIndex, int pageItems)
         {
             if (pageIndex != PageIndex)
             {
                 PageIndex = pageIndex;
                 PageItems = pageItems;
-                Query();
+                await QueryAsync();
             }
         }
 
         /// <summary>
         /// 每页记录条数变化是调用此方法
         /// </summary>
-        protected void OnPageItemsChanged(int pageItems)
+        protected async Task OnPageItemsChanged(int pageItems)
         {
             PageIndex = 1;
             PageItems = pageItems;
-            Query();
+            await QueryAsync();
         }
     }
 }

@@ -87,10 +87,10 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 新建按钮方法
         /// </summary>
-        public void Add()
+        public async Task Add()
         {
-            if (OnAdd != null) EditModel = OnAdd.Invoke();
-            else if (OnAddAsync != null) EditModel = OnAddAsync().GetAwaiter().GetResult();
+            if (OnAdd != null) EditModel = OnAdd();
+            else if (OnAddAsync != null) EditModel = await OnAddAsync();
             else new TItem();
 
             SelectedItems.Clear();
@@ -123,11 +123,11 @@ namespace BootstrapBlazor.Components
         /// 保存数据
         /// </summary>
         /// <param name="context"></param>
-        protected void Save(EditContext context)
+        protected async Task Save(EditContext context)
         {
             var valid = false;
             if (OnSave != null) valid = OnSave.Invoke((TItem)context.Model);
-            else if (OnSaveAsync != null) valid = OnSaveAsync.Invoke((TItem)context.Model).GetAwaiter().GetResult();
+            else if (OnSaveAsync != null) valid = await OnSaveAsync((TItem)context.Model);
             var option = new ToastOption();
             option.Category = valid ? ToastCategory.Success : ToastCategory.Error;
             option.Title = "保存数据";
@@ -136,7 +136,7 @@ namespace BootstrapBlazor.Components
             if (valid)
             {
                 EditModal?.Toggle();
-                Query();
+                await QueryAsync();
             }
         }
 
@@ -167,11 +167,11 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 删除数据方法
         /// </summary>
-        protected void Delete()
+        protected async Task Delete()
         {
             var ret = false;
-            if (OnDelete != null) ret = OnDelete.Invoke(SelectedItems);
-            else if (OnDeleteAsync != null) ret = OnDeleteAsync.Invoke(SelectedItems).GetAwaiter().GetResult();
+            if (OnDelete != null) ret = OnDelete(SelectedItems);
+            else if (OnDeleteAsync != null) ret = await OnDeleteAsync(SelectedItems);
             var op = new ToastOption()
             {
                 Title = "删除数据"
@@ -185,7 +185,7 @@ namespace BootstrapBlazor.Components
                 // 由于数据删除导致页码会改变，尤其是最后一页
                 // 重新计算页码
                 PageIndex = Math.Min(PageIndex, (TotalCount - SelectedItems.Count) / PageItems);
-                Query();
+                await QueryAsync();
             }
             Toast?.Show(op);
         }

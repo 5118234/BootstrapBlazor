@@ -1,6 +1,7 @@
 ﻿using BootstrapBlazor.Shared.Common;
 using BootstrapBlazor.Shared.Pages.Components;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace BootstrapBlazor.Shared.Pages
 {
@@ -11,14 +12,16 @@ namespace BootstrapBlazor.Shared.Pages
     {
         private Logger? Trace { get; set; }
 
-        private void OnPageClick(int pageIndex, int pageItems)
+        private Task OnPageClick(int pageIndex, int pageItems)
         {
             Trace?.Log($"PageIndex: {pageIndex} PageItems: {pageItems}");
+            return Task.CompletedTask;
         }
 
-        private void OnPageItemsChanged(int pageItems)
+        private Task OnPageItemsChanged(int pageItems)
         {
             Trace?.Log($"PageItems: {pageItems}");
+            return Task.CompletedTask;
         }
 
         private IEnumerable<int> PageItems => new int[] { 3, 10, 20, 40 };

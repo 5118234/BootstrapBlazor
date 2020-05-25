@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using System;
+using System.Threading.Tasks;
 
 namespace BootstrapBlazor.Components
 {
@@ -27,7 +28,7 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 获得/设置 点击确认时回调方法
         /// </summary>
-        [Parameter] public Action? OnConfirm { get; set; }
+        [Parameter] public Func<Task>? OnConfirm { get; set; }
 
         /// <summary>
         /// 获得/设置 点击关闭时回调方法

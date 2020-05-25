@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace BootstrapBlazor.Components
 {
@@ -76,16 +77,17 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 查询按钮调用此方法
         /// </summary>
-        public void Query()
+        /// <returns></returns>
+        public async Task QueryAsync()
         {
-            QueryData();
+            await QueryData();
             StateHasChanged();
         }
 
         /// <summary>
         /// 调用 OnQuery 回调方法获得数据源
         /// </summary>
-        protected void QueryData()
+        protected async Task QueryData()
         {
             SelectedItems.Clear();
             QueryData<TItem>? queryData = null;
@@ -102,7 +104,7 @@ namespace BootstrapBlazor.Components
             }
             else if (OnQueryAsync != null)
             {
-                var task = OnQueryAsync(new QueryPageOptions()
+                queryData = await OnQueryAsync(new QueryPageOptions()
                 {
                     PageIndex = PageIndex,
                     PageItems = PageItems,
@@ -110,7 +112,6 @@ namespace BootstrapBlazor.Components
                     SortOrder = SortOrder,
                     SortName = SortName
                 });
-                queryData = task.GetAwaiter().GetResult();
             }
             if (queryData != null)
             {
