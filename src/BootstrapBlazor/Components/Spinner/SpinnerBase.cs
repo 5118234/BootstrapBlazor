@@ -1,4 +1,13 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
 
 namespace BootstrapBlazor.Components
 {
@@ -10,7 +19,7 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 获取Spinner样式
         /// </summary>
-        protected string? ClassName => CssBuilder.Default()
+        protected string? ClassName => CssBuilder.Default("spinner")
             .AddClass($"spinner-{spinner}")
             .AddClass($"text-{Color.ToDescriptionString()}", Color != Color.None)
             .AddClass($"spinner-border-{Size.ToDescriptionString()}", Size != Size.None)

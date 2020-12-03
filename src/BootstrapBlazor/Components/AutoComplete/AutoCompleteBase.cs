@@ -1,6 +1,18 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.Localization;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,84 +29,84 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 获得 组件样式
         /// </summary>
-        protected string? ClassString => CssBuilder.Default("auto-complete")
+        protected virtual string? ClassString => CssBuilder.Default("auto-complete")
             .AddClass("is-loading", _isLoading)
             .AddClass("is-complete", _isShown)
             .Build();
 
         /// <summary>
+        /// 获得 最终候选数据源
+        /// </summary>
+        [NotNull]
+        protected List<string>? FilterItems { get; private set; }
+
+        /// <summary>
         /// 获得/设置 通过输入字符串获得匹配数据集合
         /// </summary>
         [Parameter]
-        public IEnumerable<string> Items { get; set; } = new string[0];
+        [NotNull]
+        public IEnumerable<string>? Items { get; set; }
 
         /// <summary>
         /// 获得/设置 无匹配数据时显示提示信息 默认提示"无匹配数据"
         /// </summary>
         [Parameter]
-        public string NoDataTip { get; set; } = "无匹配数据";
+        [NotNull]
+        public string? NoDataTip { get; set; }
 
-        /// <summary>
-        /// 获得/设置 组件值变化时回调委托方法用于通过客户端输入值获取自动完成数据
-        /// </summary>
-        [Parameter]
-        public Action<string>? OnValueChanged { get; set; }
-
-        private string? _placeholder;
         /// <summary>
         /// 获得 PlaceHolder 属性
         /// </summary>
         [Parameter]
-        public string? PlaceHolder
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(_placeholder))
-                {
-                    _placeholder = "请输入";
-                    if (AdditionalAttributes != null && AdditionalAttributes.TryGetValue("placeholder", out var ph) && !string.IsNullOrEmpty(Convert.ToString(ph)))
-                    {
-                        _placeholder = ph.ToString();
-                    }
-                }
-                return _placeholder;
-            }
-            set
-            {
-                _placeholder = value;
-            }
-        }
+        [NotNull]
+        public string? PlaceHolder { get; set; }
 
         /// <summary>
-        /// 是否开启模糊查询，默认为false
+        /// 是否开启模糊查询，默认为 false
         /// </summary>
         [Parameter]
         public bool IsLikeMatch { get; set; } = false;
 
         /// <summary>
-        /// OnParametersSet
+        /// 匹配时是否忽略大小写，默认为 true
         /// </summary>
-        protected override void OnParametersSet()
-        {
-            base.OnParametersSet();
-
-            Items = IsLikeMatch ? Items.Where(s => s.Contains(CurrentValueAsString)) : Items.Where(s => s.StartsWith(CurrentValueAsString));
-        }
+        [Parameter]
+        public bool IgnoreCase { get; set; } = true;
 
         /// <summary>
-        /// OnInput 方法
+        /// 自定义集合过滤规则
         /// </summary>
-        protected void OnInput(ChangeEventArgs args)
+        [Parameter]
+        public Func<Task<IEnumerable<string>>>? CustomFilter { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [Inject]
+        [NotNull]
+        private IStringLocalizer<AutoComplete>? Localizer { get; set; }
+
+        private string _selectedItem = "";
+        /// <summary>
+        /// 获得 候选项样式
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        protected string? ItemClassString(string item) => CssBuilder.Default("dropdown-item")
+            .AddClass("active", item == _selectedItem)
+            .Build();
+
+        /// <summary>
+        /// OnInitialized 方法
+        /// </summary>
+        protected override void OnInitialized()
         {
-            CurrentValueAsString = Convert.ToString(args.Value) ?? "";
-            _isLoading = true;
-            Task.Run(() =>
-            {
-                OnValueChanged?.Invoke(CurrentValueAsString);
-                _isLoading = false;
-                _isShown = true;
-                InvokeAsync(StateHasChanged);
-            });
+            base.OnInitialized();
+
+            NoDataTip ??= Localizer[nameof(NoDataTip)];
+            PlaceHolder ??= Localizer[nameof(PlaceHolder)];
+            Items ??= Enumerable.Empty<string>();
+            FilterItems ??= new List<string>();
         }
 
         /// <summary>
@@ -102,28 +114,73 @@ namespace BootstrapBlazor.Components
         /// </summary>
         protected void OnBlur()
         {
-            InvokeAsync(async () =>
-            {
-                await Task.Delay(100);
-                if (!_itemTrigger)
-                {
-                    _isShown = false;
-                    _itemTrigger = false;
-                    StateHasChanged();
-                }
-            });
+            _selectedItem = "";
+            _isShown = false;
         }
 
-        private bool _itemTrigger;
+        /// <summary>
+        /// 鼠标点击候选项时回调此方法
+        /// </summary>
+        protected Task OnItemClick(string val)
+        {
+            CurrentValue = val;
+            return Task.CompletedTask;
+        }
 
         /// <summary>
-        /// 
+        /// OnKeyUp 方法
         /// </summary>
-        protected void OnItemClick(string val)
+        /// <param name="args"></param>
+        /// <returns></returns>
+        protected virtual async Task OnKeyUp(KeyboardEventArgs args)
         {
-            _itemTrigger = true;
-            _isShown = false;
-            CurrentValueAsString = val;
+            if (!_isLoading)
+            {
+                _isLoading = true;
+                if (CustomFilter != null)
+                {
+                    var items = await CustomFilter();
+                    FilterItems = items.ToList();
+                }
+                else
+                {
+                    var comparison = IgnoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+                    var items = IsLikeMatch ?
+                        Items.Where(s => s.Contains(CurrentValueAsString, comparison)) :
+                        Items.Where(s => s.StartsWith(CurrentValueAsString, comparison));
+                    FilterItems = items.ToList();
+                }
+                _isLoading = false;
+                _isShown = true;
+            }
+
+            var source = FilterItems;
+            if (source.Any())
+            {
+                // 键盘向上选择
+                if (args.Key == "ArrowUp")
+                {
+                    var index = Math.Max(0, Math.Min(source.Count - 1, source.IndexOf(_selectedItem) - 1));
+                    _selectedItem = source[index];
+                }
+                else if (args.Key == "ArrowDown")
+                {
+                    var index = Math.Max(0, Math.Min(source.Count - 1, source.IndexOf(_selectedItem) + 1));
+                    _selectedItem = source[index];
+                }
+                else if (args.Key == "Escape")
+                {
+                    OnBlur();
+                }
+                else if (args.Key == "Enter")
+                {
+                    if (!string.IsNullOrEmpty(_selectedItem))
+                    {
+                        CurrentValueAsString = _selectedItem;
+                        OnBlur();
+                    }
+                }
+            }
         }
     }
 }

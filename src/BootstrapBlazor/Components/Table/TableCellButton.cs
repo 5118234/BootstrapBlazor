@@ -1,6 +1,16 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using System;
+using System.Threading.Tasks;
 
 namespace BootstrapBlazor.Components
 {
@@ -12,12 +22,20 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 获得/设置 当前行绑定数据
         /// </summary>
-        [Parameter] public TItem? Item { get; set; }
+        [Parameter]
+        public TItem? Item { get; set; }
 
         /// <summary>
         /// 获得/设置 按钮点击后的回调方法
         /// </summary>
-        [Parameter] public Action<TItem>? OnClickCallback { get; set; }
+        [Parameter]
+        public Func<TItem, Task>? OnClickCallback { get; set; }
+
+        /// <summary>
+        /// 获得/设置 OnClick 事件不刷新父组件
+        /// </summary>
+        [Parameter]
+        public Func<TItem, Task>? OnClickWithoutRenderCallback { get; set; }
 
         /// <summary>
         /// OnInitialized 方法
@@ -26,12 +44,18 @@ namespace BootstrapBlazor.Components
         {
             base.OnInitialized();
 
-            var onClick = OnClick;
-            OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, e =>
-            {
-                if (onClick.HasDelegate) onClick.InvokeAsync(e);
+            if (Size == Size.None) Size = Size.ExtraSmall;
 
-                if (Item != null) OnClickCallback?.Invoke(Item);
+            var onClick = OnClick;
+            OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, async e =>
+            {
+                if (!IsDisabled)
+                {
+                    if (onClick.HasDelegate) await onClick.InvokeAsync(e);
+
+                    if (Item != null && OnClickCallback != null) await OnClickCallback.Invoke(Item);
+                    if (Item != null && OnClickWithoutRenderCallback != null) await OnClickWithoutRenderCallback.Invoke(Item);
+                }
             });
         }
     }

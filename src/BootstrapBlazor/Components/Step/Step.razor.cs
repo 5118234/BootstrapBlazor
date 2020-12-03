@@ -1,4 +1,13 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
 using System;
 
 namespace BootstrapBlazor.Components
@@ -6,7 +15,7 @@ namespace BootstrapBlazor.Components
     /// <summary>
     /// Step 组件
     /// </summary>
-    sealed partial class Step
+    public sealed partial class Step
     {
         private string? ClassString => CssBuilder.Default("step is-horizontal")
             .AddClass("is-flex", IsLast && !((Steps?.IsCenter ?? false) || IsCenter))
@@ -32,7 +41,8 @@ namespace BootstrapBlazor.Components
 
         private string? IconClassString => CssBuilder.Default("step-icon-inner")
             .AddClass(Icon, IsIcon || Status == StepStatus.Finish || Status == StepStatus.Success)
-            .AddClass("is-status", !IsIcon && (Status == StepStatus.Finish || Status == StepStatus.Success))
+            .AddClass("fa fa-times", IsIcon || Status == StepStatus.Error)
+            .AddClass("is-status", !IsIcon && (Status == StepStatus.Finish || Status == StepStatus.Success || Status == StepStatus.Error))
             .Build();
 
         private string? TitleClassString => CssBuilder.Default("step-title")

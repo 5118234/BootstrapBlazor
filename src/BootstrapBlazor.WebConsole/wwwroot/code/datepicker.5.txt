@@ -1,1 +1,0 @@
-﻿<DateTimePicker ViewModel="DatePickerViewModel.DateTime" />

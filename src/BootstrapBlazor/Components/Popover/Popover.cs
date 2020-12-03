@@ -1,4 +1,11 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
 
 namespace BootstrapBlazor.Components
 {
@@ -8,18 +15,13 @@ namespace BootstrapBlazor.Components
     public class Popover : Tooltip
     {
         /// <summary>
-        /// 获得/设置 弹出框类型
+        /// OnInitialized 方法
         /// </summary>
-        public override PopoverType PopoverType { get; set; } = PopoverType.Popover;
+        protected override void OnInitialized()
+        {
+            base.OnInitialized();
 
-        /// <summary>
-        /// 获得/设置 显示标题
-        /// </summary>
-        [Parameter] public override string Title { get; set; } = "Popover";
-
-        /// <summary>
-        /// 获得/设置 显示文字
-        /// </summary>
-        [Parameter] public override string Content { get; set; } = "Popover";
+            PopoverType = PopoverType.Popover;
+        }
     }
 }

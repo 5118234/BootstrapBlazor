@@ -1,3 +1,0 @@
-﻿<Checkbox TItem="string" State="CheckboxState.Mixed"></Checkbox>
-<Checkbox TItem="string" State="CheckboxState.Checked"></Checkbox>
-<Checkbox TItem="string" State="CheckboxState.UnChecked"></Checkbox>

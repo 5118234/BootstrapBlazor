@@ -1,4 +1,13 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using System;
 using System.Collections.Concurrent;
@@ -12,11 +21,6 @@ namespace BootstrapBlazor.Components
     /// </summary>
     public abstract class ValidateFormBase : IdComponentBase
     {
-        /// <summary>
-        /// 获得/设置 BootstrapBlazorDataAnnotationsValidator 组件实例
-        /// </summary>
-        protected BootstrapBlazorDataAnnotationsValidator? Validator { get; set; }
-
         /// <summary>
         /// Specifies the top-level model object for the form. An edit context will
         /// be constructed for this model. If using this parameter, do not also supply
@@ -32,35 +36,16 @@ namespace BootstrapBlazor.Components
         public RenderFragment? ChildContent { get; set; }
 
         /// <summary>
-        /// A callback that will be invoked when the form is submitted.
-        /// If using this parameter, you are responsible for triggering any validation
-        /// manually, e.g., by calling <see cref="EditContext.Validate"/>.
+        /// 验证组件缓存
         /// </summary>
-        [Parameter] public EventCallback<EditContext> OnSubmit { get; set; }
-
-        /// <summary>
-        /// A callback that will be invoked when the form is submitted and the
-        /// <see cref="EditContext"/> is determined to be valid.
-        /// </summary>
-        [Parameter] public EventCallback<EditContext> OnValidSubmit { get; set; }
-
-        /// <summary>
-        /// A callback that will be invoked when the form is submitted and the
-        /// <see cref="EditContext"/> is determined to be invalid.
-        /// </summary>
-        [Parameter] public EventCallback<EditContext> OnInvalidSubmit { get; set; }
-
-        /// <summary>
-        /// 验证组件缓存 静态全局提高性能
-        /// </summary>
-        private static ConcurrentDictionary<(ValidateFormBase EditForm, Type ModelType, string FieldName), IValidateComponent> _validatorCache = new ConcurrentDictionary<(ValidateFormBase, Type, string), IValidateComponent>();
+        private ConcurrentDictionary<(Type ModelType, string FieldName), IValidateComponent> ValidatorCache { get; } = new ConcurrentDictionary<(Type, string), IValidateComponent>();
 
         /// <summary>
         /// 添加数据验证组件到 EditForm 中
         /// </summary>
         /// <param name="key"></param>
         /// <param name="comp"></param>
-        public void AddValidator((ValidateFormBase EditForm, Type ModelType, string FieldName) key, IValidateComponent comp) => _validatorCache.AddOrUpdate(key, k => comp, (k, c) => c = comp);
+        internal void AddValidator((Type ModelType, string FieldName) key, IValidateComponent comp) => ValidatorCache.AddOrUpdate(key, k => comp, (k, c) => c = comp);
 
         /// <summary>
         /// EditModel 数据模型验证方法
@@ -68,25 +53,23 @@ namespace BootstrapBlazor.Components
         /// <param name="model"></param>
         /// <param name="context"></param>
         /// <param name="results"></param>
-        public void ValidateObject(object model, ValidationContext context, List<ValidationResult> results)
+        internal void ValidateObject(object model, ValidationContext context, List<ValidationResult> results)
         {
             // 遍历所有可验证组件进行数据验证
-            foreach (var key in _validatorCache)
+            foreach (var key in ValidatorCache)
             {
-                if (key.Key.EditForm == this && key.Key.ModelType == context.ObjectType)
+                if (key.Key.ModelType == context.ObjectType)
                 {
-                    if (BootstrapBlazorEditContextDataAnnotationsExtensions.TryGetValidatableProperty(new FieldIdentifier(model, key.Key.FieldName), out var propertyInfo))
-                    {
-                        // 设置其关联属性字段
-                        var propertyValue = propertyInfo.GetValue(model);
-                        context.MemberName = propertyInfo.Name;
+                    var fi = new FieldIdentifier(model, key.Key.FieldName);
 
-                        var validator = _validatorCache[key.Key];
+                    // 设置其关联属性字段
+                    var propertyValue = fi.GetPropertyValue();
+                    var validator = ValidatorCache[key.Key];
 
-                        // 数据验证
-                        validator.ValidateProperty(propertyValue, context, results);
-                        validator.ToggleMessage(results, false);
-                    }
+                    // 数据验证
+                    context.MemberName = fi.FieldName;
+                    validator.ValidateProperty(propertyValue, context, results);
+                    validator.ToggleMessage(results, false);
                 }
             }
         }
@@ -97,18 +80,13 @@ namespace BootstrapBlazor.Components
         /// <param name="propertyValue"></param>
         /// <param name="context"></param>
         /// <param name="results"></param>
-        public void ValidateProperty(object? propertyValue, ValidationContext context, List<ValidationResult> results)
+        internal void ValidateProperty(object? propertyValue, ValidationContext context, List<ValidationResult> results)
         {
-            if (_validatorCache.TryGetValue((this, context.ObjectType, context.MemberName), out var validator))
+            if (!string.IsNullOrEmpty(context.MemberName) && ValidatorCache.TryGetValue((context.ObjectType, context.MemberName), out var validator))
             {
                 validator.ValidateProperty(propertyValue, context, results);
                 validator.ToggleMessage(results, true);
             }
         }
-
-        /// <summary>
-        /// 表单验证方法
-        /// </summary>
-        public void Validate() => Validator?.Validate();
     }
 }

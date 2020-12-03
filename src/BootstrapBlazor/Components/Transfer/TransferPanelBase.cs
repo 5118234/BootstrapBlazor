@@ -1,8 +1,18 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace BootstrapBlazor.Components
 {
@@ -29,24 +39,52 @@ namespace BootstrapBlazor.Components
             .Build();
 
         /// <summary>
+        /// 获得 Panel 样式
+        /// </summary>
+        protected string? PanelListClassString => CssBuilder.Default("checkbox-group transfer-panel-list")
+            .AddClass("disabled", IsDisabled)
+            .Build();
+
+        /// <summary>
+        /// 获得 组件是否被禁用属性值
+        /// </summary>
+        protected string? DisabledString => IsDisabled ? "disabled" : null;
+
+        /// <summary>
         /// 获得/设置 数据集合
         /// </summary>
-        [Parameter] public IEnumerable<SelectedItem>? Items { get; set; }
+        [Parameter]
+        public IEnumerable<SelectedItem>? Items { get; set; }
 
         /// <summary>
         /// 获得/设置 面板显示文字
         /// </summary>
-        [Parameter] public string Text { get; set; } = "列表";
+        [Parameter]
+        public string Text { get; set; } = "列表";
 
         /// <summary>
         /// 获得/设置 是否显示搜索框
         /// </summary>
-        [Parameter] public bool ShowSearch { get; set; }
+        [Parameter]
+        public bool ShowSearch { get; set; }
 
         /// <summary>
         /// 获得/设置 选项状态变化时回调方法
         /// </summary>
-        [Parameter] public Action? OnSelectedItemsChanged { get; set; }
+        [Parameter]
+        public Func<Task>? OnSelectedItemsChanged { get; set; }
+
+        /// <summary>
+        /// 获得/设置 搜索框的 placeholder 字符串
+        /// </summary>
+        [Parameter]
+        public string? SearchPlaceHolderString { get; set; } = "请输入 ...";
+
+        /// <summary>
+        /// 获得/设置 是否禁用 默认为 false
+        /// </summary>
+        [Parameter]
+        public bool IsDisabled { get; set; }
 
         /// <summary>
         /// 头部复选框初始化值方法
@@ -55,55 +93,41 @@ namespace BootstrapBlazor.Components
         {
             var ret = CheckboxState.Mixed;
             if (Items != null && Items.Any() && Items.All(i => i.Active)) ret = CheckboxState.Checked;
-            else if (!Items.Any(i => i.Active)) ret = CheckboxState.UnChecked;
+            else if (Items != null && !Items.Any(i => i.Active)) ret = CheckboxState.UnChecked;
             return ret;
         }
 
         /// <summary>
         /// 左侧头部复选框初始化值方法
         /// </summary>
-        protected void OnHeaderCheck(CheckboxState state, SelectedItem item)
+        protected async Task OnHeaderCheck(CheckboxState state, SelectedItem item)
         {
             if (Items != null)
             {
                 if (state == CheckboxState.Checked) Items.ToList().ForEach(i => i.Active = true);
                 else Items.ToList().ForEach(i => i.Active = false);
-                OnSelectedItemsChanged?.Invoke();
+                if (OnSelectedItemsChanged != null) await OnSelectedItemsChanged.Invoke();
             }
         }
 
         /// <summary>
-        /// RenderItem 方法
+        /// 
         /// </summary>
         /// <returns></returns>
-        protected virtual RenderFragment RenderItem() => new RenderFragment(builder =>
+        protected async Task OnStateChanged(CheckboxState state, SelectedItem item)
         {
-            var output = string.IsNullOrEmpty(SearchText) ? Items : Items?.Where(i => i.Text.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
-            foreach (var item in (output ?? new SelectedItem[0]))
-            {
-                var index = 0;
-                builder.OpenComponent<Checkbox<SelectedItem>>(index++);
-                builder.AddAttribute(index++, "class", "transfer-panel-item");
-                builder.AddAttribute(index++, nameof(Checkbox<SelectedItem>.Value), item);
-                builder.AddAttribute(index++, nameof(Checkbox<SelectedItem>.DisplayText), item.Text);
-                builder.AddAttribute(index++, nameof(Checkbox<SelectedItem>.State), item.Active ? CheckboxState.Checked : CheckboxState.UnChecked);
-                builder.AddAttribute(index++, nameof(Checkbox<SelectedItem>.OnStateChanged), new Action<CheckboxState, SelectedItem>((state, i) =>
-                {
-                    // trigger when transfer item clicked
-                    i.Active = state == CheckboxState.Checked;
+            // trigger when transfer item clicked
+            item.Active = state == CheckboxState.Checked;
 
-                    // set header
-                    OnSelectedItemsChanged?.Invoke();
-                }));
-                builder.CloseComponent();
-            }
-        });
+            // set header
+            if (OnSelectedItemsChanged != null) await OnSelectedItemsChanged.Invoke();
+        }
 
         /// <summary>
         /// 搜索框文本改变时回调此方法
         /// </summary>
         /// <param name="e"></param>
-        protected virtual void OnSearch(ChangeEventArgs e) => SearchText = e.Value.ToString();
+        protected virtual void OnSearch(ChangeEventArgs e) => SearchText = e.Value?.ToString();
 
         /// <summary>
         /// 搜索文本框按键回调方法

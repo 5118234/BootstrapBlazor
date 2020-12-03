@@ -1,4 +1,13 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
 using System;
 
 namespace BootstrapBlazor.Components
@@ -11,7 +20,7 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 获得 组件样式字符串
         /// </summary>
-        protected string? ClassString => CssBuilder.Default("circle")
+        protected virtual string? ClassString => CssBuilder.Default("circle")
             .AddClassFromAttributes(AdditionalAttributes)
             .Build();
 
@@ -39,19 +48,9 @@ namespace BootstrapBlazor.Components
             .Build();
 
         /// <summary>
-        /// 获得/设置 当前进度值
-        /// </summary>
-        protected string? ValueString => $"{Math.Round(((1 - Value * 1.0 / 100) * CircleLength), 2)}";
-
-        /// <summary>
         /// 获得/设置 Dash 字符串
         /// </summary>
         protected string DashString => $"{CircleLength}, {CircleLength}";
-
-        /// <summary>
-        /// 获得/设置 Title 字符串
-        /// </summary>
-        protected string ValueTitleString => $"{Value}%";
 
         /// <summary>
         /// 获得/设置 圆形进度半径
@@ -72,19 +71,13 @@ namespace BootstrapBlazor.Components
         /// 获得/设置 文件预览框宽度
         /// </summary>
         [Parameter]
-        public int Width { get; set; } = 120;
+        public virtual int Width { get; set; } = 120;
 
         /// <summary>
         /// 获得/设置 进度条宽度 默认为 2
         /// </summary>
         [Parameter]
-        public int StrokeWidth { get; set; } = 2;
-
-        /// <summary>
-        /// 获得/设置 当前值
-        /// </summary>
-        [Parameter]
-        public int Value { get; set; }
+        public virtual int StrokeWidth { get; set; } = 2;
 
         /// <summary>
         /// 获得/设置 组件进度条颜色

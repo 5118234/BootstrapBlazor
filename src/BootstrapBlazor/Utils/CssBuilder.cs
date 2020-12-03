@@ -1,4 +1,13 @@
-﻿using System;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -100,6 +109,22 @@ namespace BootstrapBlazor.Components
             {
                 var classList = c.ToString() ?? "";
                 AddClass(classList);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a conditional Style when it exists in a dictionary to the builder with space separator.
+        /// Null safe operation.
+        /// </summary>
+        /// <param name="additionalAttributes">Additional Attribute splat parameters</param>
+        /// <returns>CssBuilder</returns>
+        public CssBuilder AddStyleFromAttributes(IDictionary<string, object>? additionalAttributes)
+        {
+            if (additionalAttributes != null && additionalAttributes.TryGetValue("style", out var c))
+            {
+                var styleList = c.ToString() ?? "";
+                AddClass(styleList);
             }
             return this;
         }

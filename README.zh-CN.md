@@ -34,7 +34,7 @@ Blazor应用基于组件。 Blazor 中的组件是指 UI 元素，例如页面�
 
 ### 内置组件 
 
-内置组件 [传送门](http://blazor.sdgxgz.com/alerts)
+内置组件 [传送门](https://www.balzor.zone/alerts)
 
 ## 分支说明  
 
@@ -44,22 +44,29 @@ Blazor应用基于组件。 Blazor 中的组件是指 UI 元素，例如页面�
 - 其他 均为临时分支
 
 ## 演示地址  
-[![website](https://img.shields.io/badge/linux-http://blazor.sdgxgz.com-success.svg?logo=buzzfeed&logoColor=green)](http://blazor.sdgxgz.com)
+[![website](https://img.shields.io/badge/linux-https://www.blazor.zone-success.svg?logo=buzzfeed&logoColor=green)](https://www.blazor.zone)
+[![website](https://img.shields.io/badge/Github-https://argozhang.github.io-success.svg?logo=buzzfeed&logoColor=red&color=red)](https://argozhang.github.io)
 
 ## 项目截图
 
-![Toggle](https://gitee.com/LongbowEnterprise/Pictures/raw/master/BootstrapBlazor/Toggle.png "Toggle.png")
-![Toast](https://gitee.com/LongbowEnterprise/Pictures/raw/master/BootstrapBlazor/Toast.png "Toast.png")
-![Upload](https://gitee.com/LongbowEnterprise/Pictures/raw/master/BootstrapBlazor/Upload.png "Upload.png")
-![Upload2](https://gitee.com/LongbowEnterprise/Pictures/raw/master/BootstrapBlazor/Upload2.png "Upload2.png")
-![Bar](https://gitee.com/LongbowEnterprise/Pictures/raw/master/BootstrapBlazor/Bar.png "Bar.png")
-![Pei](https://gitee.com/LongbowEnterprise/Pictures/raw/master/BootstrapBlazor/Pie.png "Pei.png")
-![Doughnut](https://gitee.com/LongbowEnterprise/Pictures/raw/master/BootstrapBlazor/Doughnut.png "Doughnut.png")
+![登录可查看](https://gitee.com/LongbowEnterprise/Pictures/raw/master/BootstrapBlazor/Toggle.png "Toggle.png")
+![登录可查看](https://gitee.com/LongbowEnterprise/Pictures/raw/master/BootstrapBlazor/Toast.png "Toast.png")
+![登录可查看](https://gitee.com/LongbowEnterprise/Pictures/raw/master/BootstrapBlazor/Upload.png "Upload.png")
+![登录可查看](https://gitee.com/LongbowEnterprise/Pictures/raw/master/BootstrapBlazor/Upload2.png "Upload2.png")
+![登录可查看](https://gitee.com/LongbowEnterprise/Pictures/raw/master/BootstrapBlazor/Bar.png "Bar.png")
+![登录可查看](https://gitee.com/LongbowEnterprise/Pictures/raw/master/BootstrapBlazor/Pie.png "Pei.png")
+![登录可查看](https://gitee.com/LongbowEnterprise/Pictures/raw/master/BootstrapBlazor/Doughnut.png "Doughnut.png")
 
 ## 开源协议
 [![Gitee license](https://img.shields.io/github/license/argozhang/bootstrapblazor.svg?logo=git&logoColor=red)](https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/master/LICENSE)
 
 ## 特别鸣谢
+
+### 上海智通建设发展股份有限公司
+
+特别鸣谢胡总对本项目的鼎力赞助 **10000** 元
+
+<img src="https://gitee.com/LongbowEnterprise/Pictures/raw/master/BootstrapBlazor/Donate@x2.png" width="552px;" />
 
 ## 参与贡献
 

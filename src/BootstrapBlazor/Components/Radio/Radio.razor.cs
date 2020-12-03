@@ -1,4 +1,14 @@
-﻿using System.Collections.Generic;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace BootstrapBlazor.Components
 {
@@ -14,7 +24,7 @@ namespace BootstrapBlazor.Components
             }
         };
 
-        private void OnChanged(CheckboxState state, SelectedItem val)
+        private async Task OnChanged(CheckboxState state, SelectedItem val)
         {
             // 子选项点击后，更新其余组件
             if (!IsDisabled)
@@ -31,8 +41,8 @@ namespace BootstrapBlazor.Components
                 }
 
                 // 触发外界 OnStateChanged 事件
-                OnStateChanged?.Invoke(state, val);
-                if (ValueChanged.HasDelegate) ValueChanged.InvokeAsync(val);
+                if (ValueChanged.HasDelegate) await ValueChanged.InvokeAsync(val);
+                if (OnStateChanged != null) await OnStateChanged.Invoke(state, val);
             }
         }
     }

@@ -1,21 +1,33 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
 using System;
+using System.Globalization;
+using System.Threading.Tasks;
 
 namespace BootstrapBlazor.Components
 {
     /// <summary>
     /// BootstrapInputTextBase 组件
     /// </summary>
-    public abstract class CheckboxBase<TItem> : ValidateInputBase<TItem>
+    public abstract class CheckboxBase<TValue> : ValidateBase<TValue>
     {
         /// <summary>
         /// 获得 class 样式集合
         /// </summary>
-        protected virtual string? ClassName => CssBuilder.Default("form-checkbox")
+        protected virtual string? ClassString => CssBuilder.Default("form-checkbox")
             .AddClass("is-checked", State == CheckboxState.Checked)
             .AddClass("is-indeterminate", State == CheckboxState.Mixed)
             .AddClass("is-disabled", IsDisabled)
-            .AddClass(CssClass).AddClass(ValidCss)
+            .AddClass(ValidCss)
+            .AddClassFromAttributes(AdditionalAttributes)
             .Build();
 
         /// <summary>
@@ -29,15 +41,15 @@ namespace BootstrapBlazor.Components
         };
 
         /// <summary>
-        /// 获得 按钮 disabled 属性
+        /// 判断双向绑定类型是否为 boolean 类型
         /// </summary>
-        protected string? Disabled => IsDisabled ? "true" : null;
+        protected bool isBoolean { get; set; }
 
         /// <summary>
-        /// 获得/设置 是否禁用
+        /// 获得/设置 是否显示 Checkbox 后置 label 文字 默认为 false
         /// </summary>
         [Parameter]
-        public bool IsDisabled { get; set; }
+        public bool ShowAfterLabel { get; set; }
 
         /// <summary>
         /// 获得/设置 选择框状态
@@ -49,13 +61,14 @@ namespace BootstrapBlazor.Components
         /// State 状态改变回调方法
         /// </summary>
         /// <value></value>
-        [Parameter] public EventCallback<CheckboxState> StateChanged { get; set; }
+        [Parameter]
+        public EventCallback<CheckboxState> StateChanged { get; set; }
 
         /// <summary>
         /// 获得/设置 选择框状态改变时回调此方法
         /// </summary>
         [Parameter]
-        public Action<CheckboxState, TItem>? OnStateChanged { get; set; }
+        public Func<CheckboxState, TValue, Task>? OnStateChanged { get; set; }
 
         /// <summary>
         /// OnInitialized 方法
@@ -64,31 +77,71 @@ namespace BootstrapBlazor.Components
         {
             base.OnInitialized();
 
-            // 通过 Value 设置 State
-            if (typeof(TItem) == typeof(bool))
+            isBoolean = (Nullable.GetUnderlyingType(typeof(TValue)) ?? typeof(TValue)) == typeof(bool);
+
+            if (ShowAfterLabel) IsShowLabel = false;
+        }
+
+        /// <summary>
+        /// OnParametersSet 方法
+        /// </summary>
+        protected override void OnParametersSet()
+        {
+            base.OnParametersSet();
+
+            if (isBoolean && Value != null)
             {
-                var v = (bool?)Convert.ChangeType(Value, TypeCode.Boolean) ?? false;
-                State = v ? CheckboxState.Checked : CheckboxState.UnChecked;
+                if (BindConverter.TryConvertToBool(Value, CultureInfo.InvariantCulture, out var v))
+                {
+                    State = v ? CheckboxState.Checked : CheckboxState.UnChecked;
+                }
             }
+        }
+
+        /// <summary>
+        /// OnAfterRender 方法
+        /// </summary>
+        /// <param name="firstRender"></param>
+        protected override void OnAfterRender(bool firstRender)
+        {
+            base.OnAfterRender(firstRender);
+
+            _stateChanged = false;
         }
 
         /// <summary>
         /// 点击选择框方法
         /// </summary>
-        protected virtual void OnToggleClick()
+        protected virtual async Task OnToggleClick()
         {
             if (!IsDisabled)
             {
-                State = State != CheckboxState.Checked ? CheckboxState.Checked : CheckboxState.UnChecked;
+                await InternalStateChanged(State == CheckboxState.Checked ? CheckboxState.UnChecked : CheckboxState.Checked);
+            }
+        }
 
-                if (typeof(TItem) == typeof(bool))
+        /// <summary>
+        /// 此变量为了提高性能，避免循环更新
+        /// </summary>
+        private bool _stateChanged;
+
+        private async Task InternalStateChanged(CheckboxState state)
+        {
+            if (!_stateChanged)
+            {
+                _stateChanged = true;
+
+                if (isBoolean)
                 {
-                    var v = (bool?)Convert.ChangeType(Value, TypeCode.Boolean) ?? false;
-                    Value = (TItem)(object)(!v);
-                    if (ValueChanged.HasDelegate) ValueChanged.InvokeAsync(Value);
+                    CurrentValue = (TValue)(object)(state == CheckboxState.Checked);
                 }
-                if (StateChanged.HasDelegate) StateChanged.InvokeAsync(State);
-                OnStateChanged?.Invoke(State, Value);
+
+                if (State != state)
+                {
+                    State = state;
+                    if (StateChanged.HasDelegate) await StateChanged.InvokeAsync(State);
+                    if (OnStateChanged != null) await OnStateChanged.Invoke(State, Value);
+                }
             }
         }
 
@@ -96,10 +149,9 @@ namespace BootstrapBlazor.Components
         /// 设置 复选框状态方法
         /// </summary>
         /// <param name="state"></param>
-        public virtual void SetState(CheckboxState state)
+        public virtual async Task SetState(CheckboxState state)
         {
-            State = state;
-            if (StateChanged.HasDelegate) StateChanged.InvokeAsync(State);
+            await InternalStateChanged(state);
             StateHasChanged();
         }
     }

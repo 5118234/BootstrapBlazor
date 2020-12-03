@@ -1,23 +1,33 @@
 ﻿@namespace BootstrapBlazor.Components
 @inherits ConsoleBase
 
-<div class="card">
+<div @attributes="@AdditionalAttributes" class="@ClassString" @ref="@ConsoleElement">
     <div class="card-header d-flex">
-        <span class="flex-fill">系统监控</span>
-        <span class="light flash green" data-toggle="tooltip" title="通讯指示灯"></span>
+        <span class="flex-fill">@HeaderText</span>
+        <Light IsFlash="true" Title="@LightTitle" Color="@Color.Success"></Light>
     </div>
-    <div class="card-body console-body" style="@BodyStyleString">
+    <div class="card-body console-body" data-scroll="@AutoScrollString" style="@BodyStyleString">
         <div class="console-window">
-            @foreach (var text in Items)
+            @foreach (var item in Items)
             {
-                <div>@text</div>
+                <div @key="@Guid.NewGuid()" class="@GetClassString(item)">@item.Message</div>
             }
         </div>
     </div>
     <div class="@FooterClassString">
-        <button type="button" class="btn btn-secondary" @onclick="@ClearConsole">
-            <i class="fa fa-times"></i>
-            <span>清屏</span>
-        </button>
+        @if (ShowAutoScroll)
+        {
+            <a class="btn" style="cursor: pointer;" @onclick="@ClickAutoScroll">
+                <i class="@AutoScrollClassString" style="width: 13px;"></i>
+                <span>@AutoScrollText</span>
+            </a>
+        }
+        @if (OnClear != null)
+        {
+            <button type="button" class="@ClearButtonClassString" @onclick="@ClearConsole">
+                <i class="@ClearButtonIcon"></i>
+                <span>@ClearButtonText</span>
+            </button>
+        }
     </div>
 </div>

@@ -1,4 +1,16 @@
-﻿namespace BootstrapBlazor.Components
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using System.Collections.Generic;
+using System.Linq;
+
+namespace BootstrapBlazor.Components
 {
     /// <summary>
     /// 查询条件实体类
@@ -24,6 +36,16 @@
         /// 获得/设置 排序方式
         /// </summary>
         public SortOrder SortOrder { get; set; }
+
+        /// <summary>
+        /// 获得/设置 过滤条件集合
+        /// </summary>
+        public IEnumerable<IFilterAction> Filters { get; set; } = Enumerable.Empty<IFilterAction>();
+
+        /// <summary>
+        /// 获得/设置 搜索条件绑定模型
+        /// </summary>
+        public object? SearchModel { get; set; }
 
         /// <summary>
         /// 获得/设置 当前页码 首页为 第一页

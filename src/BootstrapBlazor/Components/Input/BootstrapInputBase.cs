@@ -1,12 +1,22 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
 using System;
+using System.Linq;
 
 namespace BootstrapBlazor.Components
 {
     /// <summary>
     /// BootstrapInputTextBase 组件
     /// </summary>
-    public abstract class BootstrapInputBase<TItem> : ValidateInputBase<TItem>
+    public abstract class BootstrapInputBase<TValue> : ValidateBase<TValue>
     {
         /// <summary>
         /// 获得 class 样式集合
@@ -15,12 +25,28 @@ namespace BootstrapBlazor.Components
             .AddClass(CssClass).AddClass(ValidCss)
             .Build();
 
+        /// <summary>
+        /// 获得/设置 input 类型 text password number
+        /// </summary>
+        protected string Type { get; set; } = "text";
+
+        /// <summary>
+        /// 获得/设置 是否为 Input-Group 组合
+        /// </summary>
+        [Parameter]
+        public bool IsGroup { get; set; }
 
         /// <summary>
         /// 获得/设置 格式化字符串
         /// </summary>
         [Parameter]
-        public Func<TItem, string>? Formatter { get; set; }
+        public Func<TValue, string>? Formatter { get; set; }
+
+        /// <summary>
+        /// 获得/设置 格式化字符串 如时间类型设置 yyyy-MM-dd
+        /// </summary>
+        [Parameter]
+        public string? FormatString { get; set; }
 
         /// <summary>
         /// OnInitialized 方法
@@ -29,14 +55,13 @@ namespace BootstrapBlazor.Components
         {
             base.OnInitialized();
 
-            // TODO: 此处应该检查 html5 type 类型检查
-            if (AdditionalAttributes != null)
+            if (AdditionalAttributes != null && AdditionalAttributes.TryGetValue("type", out var t))
             {
-                if (!AdditionalAttributes.TryGetValue("type", out var _))
-                {
-                    AdditionalAttributes.Add("type", "text");
-                }
+                Type = t.ToString()!;
             }
+
+            // 设置 Number 类型
+            if (typeof(TValue).IsNumber()) Type = "number";
         }
 
         /// <summary>
@@ -44,9 +69,13 @@ namespace BootstrapBlazor.Components
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        protected override string? FormatValueAsString(TItem value)
+        protected override string? FormatValueAsString(TValue value)
         {
-            return Formatter != null ? Formatter.Invoke(Value) : base.FormatValueAsString(value);
+            return Formatter != null
+                ? Formatter.Invoke(Value)
+                : (!string.IsNullOrEmpty(FormatString) && value != null
+                    ? ((object)value).Format(FormatString)
+                    : base.FormatValueAsString(value));
         }
     }
 }

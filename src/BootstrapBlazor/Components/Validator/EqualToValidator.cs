@@ -1,6 +1,17 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Localization;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace BootstrapBlazor.Components
 {
@@ -12,10 +23,9 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 
         /// </summary>
-        public EqualToValidator()
-        {
-            ErrorMessage = "你的输入不相同";
-        }
+        [Inject]
+        [NotNull]
+        private IStringLocalizer<EqualToValidator>? Localizer { get; set; }
 
         /// <summary>
         /// 
@@ -30,6 +40,16 @@ namespace BootstrapBlazor.Components
         public EventCallback<string> ValueChanged { get; set; }
 
         /// <summary>
+        /// OnInitialized 方法
+        /// </summary>
+        protected override void OnInitialized()
+        {
+            base.OnInitialized();
+
+            ErrorMessage = Localizer[nameof(ErrorMessage)];
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="propertyValue"></param>
@@ -39,7 +59,10 @@ namespace BootstrapBlazor.Components
         {
             var val = propertyValue?.ToString() ?? "";
             if (val != Value)
-                results.Add(new ValidationResult(ErrorMessage, new string[] { context.MemberName }));
+            {
+                var memberNames = string.IsNullOrEmpty(context.MemberName) ? null : new string[] { context.MemberName };
+                results.Add(new ValidationResult(ErrorMessage, memberNames));
+            }
         }
     }
 }

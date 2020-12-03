@@ -1,6 +1,13 @@
-﻿using Microsoft.AspNetCore.Components;
-using System.Linq;
-using System.Threading.Tasks;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
 
 namespace BootstrapBlazor.Components
 {
@@ -25,6 +32,7 @@ namespace BootstrapBlazor.Components
         /// <returns></returns>
         protected string? ButtonClassName => CssBuilder.Default("btn")
             .AddClass("dropdown-toggle", !ShowSplit)
+            .AddClass($"btn-primary", Color == Color.None)
             .AddClass($"btn-{Color.ToDescriptionString()}", Color != Color.None)
             .AddClass($"btn-{Size.ToDescriptionString()}", Size != Size.None)
             .Build();
@@ -79,38 +87,5 @@ namespace BootstrapBlazor.Components
         /// </summary>
         [Parameter]
         public DropdownType DropdownType { get; set; }
-
-        /// <summary>
-        /// OnInitialized 方法
-        /// </summary>
-        protected override void OnInitialized()
-        {
-            base.OnInitialized();
-
-            // 设置数据集合后 SelectedItem 设置默认值
-            if (SelectedItem == null)
-            {
-                SelectedItem = Items?.FirstOrDefault(i => i.Active);
-            }
-        }
-
-        /// <summary>
-        /// SetParametersAsync
-        /// </summary>
-        /// <param name="parameters"></param>
-        /// <returns></returns>
-        public override async Task SetParametersAsync(ParameterView parameters)
-        {
-            await base.SetParametersAsync(parameters);
-
-            if (Color == Color.None) Color = Color.Primary;
-
-            if (SelectedItem == null || !(Items?.Contains(SelectedItem) ?? false))
-            {
-                var item = Items?.FirstOrDefault(i => i.Active);
-                if (item == null) item = Items?.FirstOrDefault();
-                if (item != null) SelectedItem = item;
-            }
-        }
     }
 }

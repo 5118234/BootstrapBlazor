@@ -1,5 +1,14 @@
-﻿using Microsoft.AspNetCore.Components;
-using System.Threading.Tasks;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
+using System.Diagnostics.CodeAnalysis;
 
 namespace BootstrapBlazor.Components
 {
@@ -11,27 +20,21 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 获得/设置 组件 id 属性
         /// </summary>
-        [Parameter] public virtual string? Id { get; set; }
+        [Parameter]
+        public virtual string? Id { get; set; }
+
+        [Inject]
+        [NotNull]
+        private IComponentIdGenerator? ComponentIdGenerator { get; set; }
 
         /// <summary>
-        /// OnAfterRenderAsync 方法
+        /// OnInitialized 方法
         /// </summary>
-        /// <param name="firstRender"></param>
-        /// <returns></returns>
-        protected override async Task OnAfterRenderAsync(bool firstRender)
+        protected override void OnInitialized()
         {
-            await base.OnAfterRenderAsync(firstRender);
+            base.OnInitialized();
 
-            // 客户端组件生成后通过 invoke 生成客户端组件 id
-            if (firstRender)
-            {
-                if (JSRuntime != null && string.IsNullOrEmpty(Id))
-                {
-                    // 生成 Id
-                    Id = await JSRuntime.InvokeAsync<string>(func: "getUID");
-                    await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-                }
-            }
+            Id ??= ComponentIdGenerator.Generate(this);
         }
     }
 }

@@ -1,5 +1,15 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace BootstrapBlazor.Components
 {
@@ -9,14 +19,33 @@ namespace BootstrapBlazor.Components
     public abstract class CollapseBase : BootstrapComponentBase
     {
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="collapsed"></param>
+        /// <returns></returns>
+        protected string? GetButtonClassString(bool collapsed) => CssBuilder.Default("btn btn-link")
+            .AddClass("collapsed", collapsed)
+            .Build();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="collpased"></param>
+        /// <returns></returns>
+        protected string? GetClassString(bool collpased) => CssBuilder.Default("collapse-item")
+            .AddClass("collapse", collpased)
+            .AddClass("collapse show", !collpased)
+            .Build();
+
+        /// <summary>
         /// 获得 按钮样式集合
         /// </summary>
-        protected string? ClassString => CssBuilder.Default("accordion")
+        protected virtual string? ClassString => CssBuilder.Default("accordion")
             .AddClass("is-accordion", IsAccordion)
             .AddClassFromAttributes(AdditionalAttributes)
             .Build();
 
-        private List<CollapseItem> _items = new List<CollapseItem>();
+        private readonly List<CollapseItem> _items = new List<CollapseItem>();
 
         /// <summary>
         /// 获得/设置 组件 DOM 实例
@@ -56,11 +85,11 @@ namespace BootstrapBlazor.Components
         /// OnAfterRender 方法
         /// </summary>
         /// <param name="firstRender"></param>
-        protected override void OnAfterRender(bool firstRender)
+        protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            base.OnAfterRender(firstRender);
+            await base.OnAfterRenderAsync(firstRender);
 
-            if (firstRender) JSRuntime.Invoke(CollapseElement, "collapse");
+            if (firstRender) await JSRuntime.InvokeVoidAsync(CollapseElement, "collapse");
         }
 
         /// <summary>
@@ -69,10 +98,10 @@ namespace BootstrapBlazor.Components
         /// <param name="item"></param>
         protected virtual void OnItemClick(CollapseItem item)
         {
-            foreach (var tab in Items)
+            foreach (var collapseItem in Items)
             {
-                var isActive = tab.Text == item.Text;
-                tab.SetCollapsed(isActive);
+                var isActive = collapseItem.Text == item.Text;
+                collapseItem.SetCollapsed(isActive);
             }
         }
     }

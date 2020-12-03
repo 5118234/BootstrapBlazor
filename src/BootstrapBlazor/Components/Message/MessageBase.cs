@@ -1,6 +1,16 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace BootstrapBlazor.Components
 {
@@ -35,16 +45,16 @@ namespace BootstrapBlazor.Components
         protected IEnumerable<MessageOption> Messages => _messages;
 
         /// <summary>
-        /// ToastServices 服务实例
-        /// </summary>
-        [Inject]
-        public MessageService? MessageService { get; set; }
-
-        /// <summary>
         /// 获得/设置 显示位置 默认为 Top
         /// </summary>
         [Parameter]
         public Placement Placement { get; set; } = Placement.Top;
+
+        /// <summary>
+        /// ToastServices 服务实例
+        /// </summary>
+        [Inject]
+        public MessageService? MessageService { get; set; }
 
         /// <summary>
         /// OnInitialized 方法
@@ -54,16 +64,13 @@ namespace BootstrapBlazor.Components
             base.OnInitialized();
 
             // 注册 Toast 弹窗事件
-            if (MessageService != null)
-            {
-                MessageService.Subscribe(Show);
-            }
+            MessageService?.Register(this, Show);
         }
 
-        private void Show(MessageOption option)
+        private async Task Show(MessageOption option)
         {
             _messages.Add(option);
-            InvokeAsync(StateHasChanged).ConfigureAwait(false);
+            await InvokeAsync(StateHasChanged);
         }
 
         /// <summary>
@@ -87,13 +94,17 @@ namespace BootstrapBlazor.Components
         }
 
         /// <summary>
-        /// Dispose 方法
+        /// 
         /// </summary>
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            // 移除 Toast 弹窗服务事件
-            if (MessageService != null) MessageService.UnSubscribe(Show);
+            base.Dispose(disposing);
+
+            if (disposing)
+            {
+                MessageService?.UnRegister(this);
+            }
         }
     }
 }

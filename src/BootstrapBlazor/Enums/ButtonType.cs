@@ -1,4 +1,15 @@
-﻿namespace BootstrapBlazor.Components
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using System.ComponentModel;
+
+namespace BootstrapBlazor.Components
 {
     /// <summary>
     /// 按钮类型枚举
@@ -8,22 +19,19 @@
         /// <summary>
         /// 正常按钮
         /// </summary>
+        [Description("button")]
         Button,
+
         /// <summary>
         /// 提交按钮
         /// </summary>
+        [Description("submit")]
         Submit,
-        /// <summary>
-        /// Link 按钮
-        /// </summary>
-        Link,
+
         /// <summary>
         /// 重置按钮
         /// </summary>
-        Reset,
-        /// <summary>
-        /// 普通按钮
-        /// </summary>
-        Input,
+        [Description("reset")]
+        Reset
     }
 }

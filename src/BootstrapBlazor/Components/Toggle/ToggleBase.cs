@@ -1,20 +1,37 @@
-﻿using Microsoft.AspNetCore.Components;
-using System;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
+using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 
 namespace BootstrapBlazor.Components
 {
     /// <summary>
     /// Toggle 开关组件
     /// </summary>
-    public class ToggleBase : BootstrapComponentBase
+    public class ToggleBase : ValidateBase<bool>
     {
         /// <summary>
         /// 获得 样式集合
         /// </summary>
         protected virtual string? ClassName => CssBuilder.Default("toggle btn")
-            .AddClass($"btn-{Color.ToDescriptionString()}", Color != Color.None)
             .AddClass("btn-default off", !Value)
             .AddClass("disabled", IsDisabled)
+            .AddClassFromAttributes(AdditionalAttributes)
+            .Build();
+
+        /// <summary>
+        /// 获得 ToggleOn 样式
+        /// </summary>
+        protected string? ToggleOnClassString => CssBuilder.Default("toggle-on")
+            .AddClass($"bg-{Color.ToDescriptionString()}", Color != Color.None)
             .Build();
 
         /// <summary>
@@ -31,32 +48,18 @@ namespace BootstrapBlazor.Components
         public virtual int Width { get; set; } = 120;
 
         /// <summary>
-        /// 获得/设置 是否禁用
-        /// </summary>
-        [Parameter] public bool IsDisabled { get; set; }
-
-        /// <summary>
         /// 获得/设置 组件 On 时显示文本
         /// </summary>
         [Parameter]
-        public virtual string? OnText { get; set; } = "展开";
+        [NotNull]
+        public virtual string? OnText { get; set; }
 
         /// <summary>
         /// 获得/设置 组件 Off 时显示文本
         /// </summary>
         [Parameter]
-        public virtual string? OffText { get; set; } = "收缩";
-
-        /// <summary>
-        /// 获得/设置 组件是否处于 On 状态 默认为 Off 状态
-        /// </summary>
-        [Parameter]
-        public bool Value { get; set; }
-
-        /// <summary>
-        /// Gets or sets a callback that updates the bound value.
-        /// </summary>
-        [Parameter] public EventCallback<bool> ValueChanged { get; set; }
+        [NotNull]
+        public virtual string? OffText { get; set; }
 
         /// <summary>
         /// 获得/设置 组件颜色 默认为 Success 颜色
@@ -67,20 +70,13 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 点击控件时触发此方法
         /// </summary>
-        protected virtual void OnClick()
+        protected virtual async Task OnClick()
         {
             if (!IsDisabled)
             {
                 Value = !Value;
-                if (ValueChanged.HasDelegate) ValueChanged.InvokeAsync(Value);
-                OnValueChanged?.Invoke(Value);
+                if (ValueChanged.HasDelegate) await ValueChanged.InvokeAsync(Value);
             }
         }
-
-        /// <summary>
-        /// 获得/设置 控件值变化时触发此事件
-        /// </summary>
-        [Parameter]
-        public Action<bool>? OnValueChanged { get; set; }
     }
 }

@@ -1,4 +1,13 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
 
 namespace BootstrapBlazor.Components
 {
@@ -37,17 +46,12 @@ namespace BootstrapBlazor.Components
         [Parameter]
         public string? Class { get; set; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        [Parameter]
-        public RenderFragment? ChildContent { get; set; }
 
         /// <summary>
         /// 获得/设置 CardHeard
         /// </summary>
         [Parameter]
-        public RenderFragment? CardHeard { get; set; }
+        public RenderFragment? CardHeader { get; set; }
 
         /// <summary>
         /// 获得/设置 CardBody
@@ -66,18 +70,6 @@ namespace BootstrapBlazor.Components
         /// </summary>
         [Parameter]
         public Color Color { get; set; }
-
-        /// <summary>
-        /// 设置是否显示Footer
-        /// </summary>
-        [Parameter]
-        public bool IsShowFooter { get; set; } = false;
-
-        /// <summary>
-        /// 设置是否显示Header
-        /// </summary>
-        [Parameter]
-        public bool IsShowHeader { get; set; } = false;
 
         /// <summary>
         /// 设置是否居中

@@ -1,3 +1,0 @@
-﻿<label class="control-label">双向绑定</label>
-<Toggle @bind-Value="@BindValue"></Toggle>
-<div>绑定数值: @BindValue</div>

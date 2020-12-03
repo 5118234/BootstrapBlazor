@@ -1,6 +1,17 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 
 namespace BootstrapBlazor.Components
 {
@@ -12,78 +23,85 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 获得/设置 PopoverConfirm 服务实例
         /// </summary>
-        [Inject] PopoverService? PopoverService { get; set; }
+        [Inject]
+        [NotNull]
+        private PopoverService? PopoverService { get; set; }
 
         /// <summary>
         /// 获得/设置 弹窗显示位置
         /// </summary>
-        [Parameter] public Placement Placement { get; set; } = Placement.Auto;
+        [Parameter]
+        public Placement Placement { get; set; } = Placement.Auto;
 
         /// <summary>
         /// 获得/设置 显示文字
         /// </summary>
-        [Parameter] public string Content { get; set; } = "确认删除吗？";
+        [Parameter]
+        public string? Content { get; set; }
 
         /// <summary>
         /// 获得/设置 点击确认时回调方法
         /// </summary>
-        [Parameter] public Action? OnConfirm { get; set; }
+        [Parameter]
+        public Func<Task> OnConfirm { get; set; } = () => Task.CompletedTask;
 
         /// <summary>
         /// 获得/设置 点击关闭时回调方法
         /// </summary>
-        [Parameter] public Action? OnClose { get; set; }
+        [Parameter]
+        public Func<Task> OnClose { get; set; } = () => Task.CompletedTask;
 
         /// <summary>
         /// 获得/设置 点击确认弹窗前回调方法 返回真时弹出弹窗 返回假时不弹出
         /// </summary>
-        [Parameter] public Func<bool> OnBeforeClick { get; set; } = new Func<bool>(() => true);
+        [Parameter]
+        public Func<Task<bool>> OnBeforeClick { get; set; } = () => Task.FromResult(true);
 
         /// <summary>
         /// 获得/设置 显示标题
         /// </summary>
-        [Parameter] public string? Title { get; set; }
+        [Parameter]
+        public string? Title { get; set; }
 
         /// <summary>
-        /// 获得/设置 显示标题 默认为 删除
+        /// 获得/设置 确认按钮颜色
         /// </summary>
-        [Parameter] public string ButtonText { get; set; } = "删除";
+        [Parameter]
+        public Color CloseButtonColor { get; set; } = Color.Secondary;
 
         /// <summary>
         /// 获得/设置 关闭按钮显示文字 默认为 关闭
         /// </summary>
-        [Parameter] public string CloseButtonText { get; set; } = "关闭";
-
-        /// <summary>
-        /// 获得/设置 确认按钮颜色
-        /// </summary>
-        [Parameter] public Color CloseButtonColor { get; set; } = Color.Secondary;
+        [Parameter]
+        [NotNull]
+        public string? CloseButtonText { get; set; }
 
         /// <summary>
         /// 获得/设置 确认按钮显示文字 默认为 确定
         /// </summary>
-        [Parameter] public string ConfirmButtonText { get; set; } = "确定";
+        [Parameter]
+        [NotNull]
+        public string? ConfirmButtonText { get; set; }
 
         /// <summary>
         /// 获得/设置 确认按钮颜色
         /// </summary>
-        [Parameter] public Color ConfirmButtonColor { get; set; } = Color.Primary;
-
-        /// <summary>
-        /// 获得/设置 按钮图标 默认为 fa-remove
-        /// </summary>
-        [Parameter] public string? ButtonIcon { get; set; } = "fa fa-remove";
+        [Parameter]
+        public Color ConfirmButtonColor { get; set; } = Color.Primary;
 
         /// <summary>
         /// 获得/设置 确认框图标
         /// </summary>
-        [Parameter] public string? ConfirmIcon { get; set; } = "fa fa-exclamation-circle text-info";
+        [Parameter]
+        public string ConfirmIcon { get; set; } = "fa fa-exclamation-circle text-info";
 
         /// <summary>
         /// OnInitialized 方法
         /// </summary>
         protected override void OnInitialized()
         {
+            base.OnInitialized();
+
             // 进行弹窗拦截，点击确认按钮后回调原有 OnClick
             OnClick = EventCallback.Factory.Create<MouseEventArgs>(this, e => Show());
         }
@@ -91,13 +109,13 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 显示确认弹窗方法
         /// </summary>
-        protected void Show()
+        protected async Task Show()
         {
             // 回调消费者逻辑 判断是否需要弹出确认框
-            if (OnBeforeClick())
+            if (await OnBeforeClick())
             {
                 // 生成客户端弹窗
-                PopoverService?.Show(new PopoverConfirmOption()
+                PopoverService.Show(new PopoverConfirmOption()
                 {
                     ButtonId = Id,
                     Title = Title,
@@ -109,11 +127,11 @@ namespace BootstrapBlazor.Components
                     Icon = ConfirmIcon,
                     OnConfirm = OnConfirm,
                     OnClose = OnClose,
-                    Callback = new Action(() =>
+                    Callback = async () =>
                     {
                         // 调用 JS 进行弹窗 等待 弹窗点击确认回调
-                        JSRuntime.Invoke(Id, "confirm");
-                    })
+                        await JSRuntime.InvokeVoidAsync(Id, "bb_confirm");
+                    }
                 });
             }
         }

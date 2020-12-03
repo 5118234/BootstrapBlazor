@@ -1,3 +1,12 @@
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
 using Microsoft.AspNetCore.Components;
 
 namespace BootstrapBlazor.Components
@@ -7,11 +16,6 @@ namespace BootstrapBlazor.Components
     /// </summary>
     public abstract class AvatarBase : BootstrapComponentBase
     {
-        /// <summary>
-        /// 获得/设置 DOM 组件实例
-        /// </summary>
-        protected ElementReference AvatarElement { get; set; }
-
         /// <summary>
         /// 获得 样式集合
         /// </summary>
@@ -49,7 +53,7 @@ namespace BootstrapBlazor.Components
         public bool IsIcon { get; set; }
 
         /// <summary>
-        /// 获得/设置 是否为图标
+        /// 获得/设置 头像框显示图标
         /// </summary>
         [Parameter]
         public string Icon { get; set; } = "fa fa-user";
@@ -84,17 +88,6 @@ namespace BootstrapBlazor.Components
         protected bool? IsLoaded { get; set; }
 
         /// <summary>
-        /// OnAfterRender 方法
-        /// </summary>
-        /// <param name="firstRender"></param>
-        protected override void OnAfterRender(bool firstRender)
-        {
-            base.OnAfterRender(firstRender);
-
-            if (firstRender) JSRuntime.Invoke(AvatarElement, "avatar");
-        }
-
-        /// <summary>
         /// 图片加载失败时回调此方法
         /// </summary>
         protected void OnError()
@@ -104,7 +97,7 @@ namespace BootstrapBlazor.Components
         }
 
         /// <summary>
-        /// 图片加载失败时回调此方法
+        /// 图片加载成功时回调此方法
         /// </summary>
         protected void OnLoad()
         {

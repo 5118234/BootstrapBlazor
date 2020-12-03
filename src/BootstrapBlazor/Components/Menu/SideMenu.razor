@@ -8,21 +8,24 @@
         {
             <div class="card">
                 <div class="card-header">
-                    <div class="card-header-wrapper">
-                        <MenuLink Url="@item.Url" Text="@item.Text" Active="@item.IsActive" Icon="@item.Icon" class="nav-link collapsed collapse" data-toggle="collapse" aria-expanded="false" />
+                    <div class="@GetMenuWrapperClassString(item)">
+                        <MenuLink Item="@item" DisableNavigation="@DisableNavigation" class="@GetMenuItemLinkClassString(item)" data-toggle="collapse" aria-expanded="@GetExpandedString(item)" OnClick="@OnClick" />
                         <i class="fa fa-angle-down"></i>
                     </div>
                 </div>
-                <div class="collapse-item collapse">
-                    <div class="card-body has-leaf">
-                        <SideMenu Items="@item.Items" IsAccordion ="@IsAccordion"/>
+                @if (!item.IsDisabled)
+                {
+                    <div class="@GetMenuItemClassString(item)">
+                        <div class="card-body has-leaf">
+                            <SideMenu Items="@item.Items" DisableNavigation="@DisableNavigation" IsAccordion="@IsAccordion" OnClick="@OnClick" />
+                        </div>
                     </div>
-                </div>
+                }
             </div>
         }
         else
         {
-            <MenuLink Url="@item.Url" Text="@item.Text" Active="@item.IsActive" Icon="@item.Icon" class="nav-link" />
+            <MenuLink Item="@item" DisableNavigation="@DisableNavigation" class="nav-link" OnClick="@OnClick" />
         }
     }
 </div>

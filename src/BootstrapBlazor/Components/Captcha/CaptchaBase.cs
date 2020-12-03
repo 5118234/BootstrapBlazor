@@ -1,10 +1,19 @@
-﻿using System;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 
 namespace BootstrapBlazor.Components
 {
@@ -13,16 +22,9 @@ namespace BootstrapBlazor.Components
     /// </summary>
     public abstract class CaptchaBase : BootstrapComponentBase
     {
-        private JSInterop<CaptchaBase>? Interop { get; set; }
-
         private static Random ImageRandomer { get; set; } = new Random();
 
         private int OriginX { get; set; }
-
-        /// <summary>
-        /// 获得/设置 Captcha DOM 元素实例
-        /// </summary>
-        protected ElementReference Captcha { get; set; }
 
         /// <summary>
         /// 获得 样式集合
@@ -70,36 +72,6 @@ namespace BootstrapBlazor.Components
         /// </summary>
         [Parameter]
         public Func<string>? GetImageName { get; set; }
-
-        /// <summary>
-        /// 获得/设置 Header 显示文本
-        /// </summary>
-        [Parameter]
-        public string HeaderText { get; set; } = "请完成安全验证";
-
-        /// <summary>
-        /// 获得/设置 Bar 显示文本
-        /// </summary>
-        [Parameter]
-        public string BarText { get; set; } = "向右滑动填充拼图";
-
-        /// <summary>
-        /// 获得/设置 Bar 显示文本
-        /// </summary>
-        [Parameter]
-        public string FailedText { get; set; } = "加载失败";
-
-        /// <summary>
-        /// 获得/设置 Bar 显示文本
-        /// </summary>
-        [Parameter]
-        public string LoadText { get; set; } = "正在加载 ...";
-
-        /// <summary>
-        /// 获得/设置 Bar 显示文本
-        /// </summary>
-        [Parameter]
-        public string TryText { get; set; } = "再试一次";
 
         /// <summary>
         /// 获得/设置 容错偏差
@@ -154,7 +126,11 @@ namespace BootstrapBlazor.Components
             return ret;
         }
 
-        private CaptchaOption GetCaptchaOption()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected virtual CaptchaOption GetCaptchaOption()
         {
             var option = new CaptchaOption()
             {
@@ -191,23 +167,11 @@ namespace BootstrapBlazor.Components
         protected void OnClickRefresh() => Reset();
 
         /// <summary>
-        /// Dispose 方法
-        /// </summary>
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-
-            if (disposing) Interop?.Dispose();
-        }
-
-        /// <summary>
         /// 重置组件方法
         /// </summary>
-        public void Reset()
+        protected virtual void Reset()
         {
-            var option = GetCaptchaOption();
-            if (Interop == null && JSRuntime != null) Interop = new JSInterop<CaptchaBase>(JSRuntime);
-            Interop?.Invoke(this, Captcha, "captcha", nameof(Verify), option);
+
         }
     }
 }

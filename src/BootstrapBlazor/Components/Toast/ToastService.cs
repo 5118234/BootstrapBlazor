@@ -1,50 +1,120 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.Extensions.Options;
+using System;
 
 namespace BootstrapBlazor.Components
 {
     /// <summary>
     /// Toast 弹出窗服务类
     /// </summary>
-    public class ToastService
+    public class ToastService : PopupServiceBase<ToastOption>, IDisposable
     {
-        List<Action<ToastOption>> Subscribes { get; set; }
+        private IDisposable? _optionsReloadToken;
+        private BootstrapBlazorOptions _option;
 
         /// <summary>
-        /// 默认构造函数
-        /// </summary>
-        public ToastService()
-        {
-            Subscribes = new List<Action<ToastOption>>();
-        }
-
-        /// <summary>
-        /// 显示窗口方法
+        /// 构造方法
         /// </summary>
         /// <param name="option"></param>
+        public ToastService(IOptionsMonitor<BootstrapBlazorOptions> option)
+        {
+            _option = option.CurrentValue;
+            _optionsReloadToken = option.OnChange(op => _option = op);
+        }
+
+        /// <summary>
+        /// Show 方法
+        /// </summary>
+        /// <param name="option"></param>
+        public override void Show(ToastOption option)
+        {
+            if (!option.ForceDelay && _option.ToastDelay != 0) option.Delay = _option.ToastDelay;
+
+            base.Show(option);
+        }
+
+        /// <summary>
+        /// Toast 调用成功快捷方法
+        /// </summary>
+        /// <param name="title">Title 属性</param>
+        /// <param name="content">Content 属性</param>
+        /// <param name="autoHide">自动隐藏属性默认为 true</param>
         /// <returns></returns>
-        public void Show(ToastOption option)
+        public void Success(string? title = null, string? content = null, bool autoHide = true)
         {
-            Subscribes.AsParallel().ForAll(callback => callback.Invoke(option));
+            Show(new ToastOption()
+            {
+                Category = ToastCategory.Success,
+                IsAutoHide = autoHide,
+                Title = title ?? "",
+                Content = content ?? ""
+            });
         }
 
         /// <summary>
-        /// 订阅弹窗事件
+        /// Toast 调用错误快捷方法
         /// </summary>
-        /// <param name="callback"></param>
-        internal void Subscribe(Action<ToastOption> callback)
+        /// <param name="title"></param>
+        /// <param name="content"></param>
+        /// <param name="autoHide"></param>
+        /// <returns></returns>
+        public void Error(string? title = null, string? content = null, bool autoHide = true)
         {
-            Subscribes.Add(callback);
+            Show(new ToastOption()
+            {
+                Category = ToastCategory.Error,
+                IsAutoHide = autoHide,
+                Title = title ?? "",
+                Content = content ?? ""
+            });
         }
 
         /// <summary>
-        /// 退订弹窗事件
+        /// Toast 调用提示信息快捷方法
         /// </summary>
-        /// <param name="callback"></param>
-        internal void UnSubscribe(Action<ToastOption> callback)
+        /// <param name="title"></param>
+        /// <param name="content"></param>
+        /// <param name="autoHide"></param>
+        /// <returns></returns>
+        public void Information(string? title = null, string? content = null, bool autoHide = true)
         {
-            Subscribes.Remove(callback);
+            Show(new ToastOption()
+            {
+                Category = ToastCategory.Information,
+                IsAutoHide = autoHide,
+                Title = title ?? "",
+                Content = content ?? ""
+            });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _optionsReloadToken?.Dispose();
+                _optionsReloadToken = null;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

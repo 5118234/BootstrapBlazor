@@ -1,6 +1,16 @@
-﻿using Microsoft.JSInterop;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace BootstrapBlazor.Components
 {
@@ -29,13 +39,16 @@ namespace BootstrapBlazor.Components
         /// <param name="func"></param>
         /// <param name="method"></param>
         /// <param name="args"></param>
-        public void Invoke(TValue value, object el, string func, string method, params object[] args)
+        public async ValueTask Invoke(TValue value, object? el, string func, string? method, params object[] args)
         {
             _objRef = DotNetObjectReference.Create(value);
-            var paras = new List<object>();
+            var paras = new List<object>()
+            {
+                _objRef
+            };
             if (!string.IsNullOrEmpty(method)) paras.Add(method);
             if (args != null) paras.AddRange(args);
-            _jsRuntime.Invoke(el, func, _objRef, paras.ToArray());
+            await _jsRuntime.InvokeVoidAsync(el, func, paras.ToArray());
         }
 
         /// <summary>
@@ -47,6 +60,7 @@ namespace BootstrapBlazor.Components
             if (disposing)
             {
                 _objRef?.Dispose();
+                _objRef = null;
             }
         }
 

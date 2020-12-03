@@ -1,6 +1,17 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Localization;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace BootstrapBlazor.Components
 {
@@ -9,20 +20,18 @@ namespace BootstrapBlazor.Components
     /// </summary>
     public class StringLengthValidator : ValidatorComponentBase
     {
-        private int _length = 50;
+        /// <summary>
+        /// 
+        /// </summary>
+        [Inject]
+        [NotNull]
+        private IStringLocalizer<StringLengthValidator>? Localizer { get; set; }
+
         /// <summary>
         /// 
         /// </summary>
         [Parameter]
-        public int Length
-        {
-            get { return _length; }
-            set
-            {
-                _length = value;
-                ErrorMessage = $"不可为空，{_length}字以内";
-            }
-        }
+        public int Length { get; set; } = 50;
 
         /// <summary>
         /// 
@@ -33,7 +42,11 @@ namespace BootstrapBlazor.Components
         public override void Validate(object? propertyValue, ValidationContext context, List<ValidationResult> results)
         {
             var val = propertyValue?.ToString() ?? "";
-            if (val.Length > Length) results.Add(new ValidationResult(ErrorMessage, new string[] { context.MemberName }));
+            if (val.Length > Length)
+            {
+                ErrorMessage = Localizer[nameof(ErrorMessage), Length];
+                results.Add(new ValidationResult(ErrorMessage, string.IsNullOrEmpty(context.MemberName) ? null : new string[] { context.MemberName }));
+            }
         }
     }
 }

@@ -1,4 +1,13 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
 using System;
 using System.Threading.Tasks;
 
@@ -9,6 +18,12 @@ namespace BootstrapBlazor.Components
     /// </summary>
     public partial class ToastBox
     {
+        private MarkupString MarkupContent => string.IsNullOrEmpty(Content) ? new MarkupString() : new MarkupString(Content);
+        /// <summary>
+        /// ToastBox HTML 实例引用
+        /// </summary>
+        protected ElementReference ToastBoxElement { get; set; }
+
         /// <summary>
         /// 获得/设置 弹出框类型
         /// </summary>
@@ -50,32 +65,38 @@ namespace BootstrapBlazor.Components
         [Parameter] public ToastCategory Category { get; set; }
 
         /// <summary>
-        /// 获得/设置 显示标题
+        /// 获得/设置 显示标题 默认为 未设置
         /// </summary>
-        [Parameter] public string Title { get; set; } = "Toast";
+        [Parameter]
+        public string? Title { get; set; }
 
         /// <summary>
         /// 获得/设置 Toast Body 子组件
         /// </summary>
-        [Parameter] public string? Content { get; set; }
+        [Parameter]
+        public string? Content { get; set; }
 
         /// <summary>
         /// 获得/设置 是否自动隐藏
         /// </summary>
-        [Parameter] public bool IsAutoHide { get; set; } = true;
+        [Parameter]
+        public bool IsAutoHide { get; set; } = true;
 
         /// <summary>
         /// 获得/设置 自动隐藏时间间隔
         /// </summary>
-        [Parameter] public int Delay { get; set; } = 4000;
+        [Parameter]
+        public int Delay { get; set; } = 4000;
 
         /// <summary>
         /// 获得/设置 Toast 实例
         /// </summary>
         /// <value></value>
-        [CascadingParameter] public Toast? Toast { get; set; }
+        [CascadingParameter]
+        public Toast? Toast { get; set; }
 
-        private JSInterop<Toast>? _interop;
+        private JSInterop<Toast>? Interop { get; set; }
+
         /// <summary>
         /// OnAfterRenderAsync 方法
         /// </summary>
@@ -85,12 +106,12 @@ namespace BootstrapBlazor.Components
             await base.OnAfterRenderAsync(firstRender);
 
             // 执行客户端动画
-            if (firstRender && JSRuntime != null)
+            if (firstRender)
             {
-                if (Toast != null && !string.IsNullOrEmpty(Id))
+                if (Toast != null)
                 {
-                    _interop = new JSInterop<Toast>(JSRuntime);
-                    _interop.Invoke(Toast, Id, "showToast", nameof(ToastBase.Clear));
+                    Interop = new JSInterop<Toast>(JSRuntime);
+                    await Interop.Invoke(Toast, ToastBoxElement, "showToast", nameof(Toast.Clear));
                 }
             }
         }
@@ -102,7 +123,11 @@ namespace BootstrapBlazor.Components
         {
             base.Dispose(disposing);
 
-            if (disposing) _interop?.Dispose();
+            if (disposing)
+            {
+                Interop?.Dispose();
+                Interop = null;
+            }
         }
     }
 }

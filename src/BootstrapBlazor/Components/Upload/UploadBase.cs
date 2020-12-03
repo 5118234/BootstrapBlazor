@@ -1,6 +1,17 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace BootstrapBlazor.Components
 {
@@ -9,23 +20,17 @@ namespace BootstrapBlazor.Components
     /// </summary>
     public abstract class UploadBase : BootstrapComponentBase
     {
-        private JSInterop<UploadBase>? Interop { get; set; }
-
-        /// <summary>
-        /// 获得/设置 Captcha DOM 元素实例
-        /// </summary>
-        protected ElementReference UploaderElement { get; set; }
-
         /// <summary>
         /// 获得 组件样式
         /// </summary>
-        protected string? ClassName => CssBuilder.Default("upload")
+        protected string? ClassString => CssBuilder.Default("upload")
             .AddClass("is-circle", IsCircle)
             .AddClass("is-prev", ShowPreview)
             .AddClass("is-wall", IsPhotoWall)
             .AddClass("is-card", IsCard)
             .AddClass("is-stack", IsStack)
             .AddClass("is-progress", ShowProgress)
+            .AddClass("is-disabled", IsDisabled)
             .AddClassFromAttributes(AdditionalAttributes)
             .Build();
 
@@ -59,10 +64,9 @@ namespace BootstrapBlazor.Components
         protected string? MultipleString => (IsMultiple || IsStack) ? "multiple" : null;
 
         /// <summary>
-        /// 获得/设置 上传按钮显示文字
+        /// 获得 组件是否被禁用属性值
         /// </summary>
-        [Parameter]
-        public string Text { get; set; } = "点击上传";
+        protected string? DisabledString => IsDisabled ? "disabled" : null;
 
         /// <summary>
         /// 获得/设置 上传按钮图标
@@ -87,6 +91,12 @@ namespace BootstrapBlazor.Components
         /// </summary>
         [Parameter]
         public bool ShowProgress { get; set; }
+
+        /// <summary>
+        /// 获得/设置 是否显示重置按钮
+        /// </summary>
+        [Parameter]
+        public bool ShowReset { get; set; }
 
         /// <summary>
         /// 获得/设置 上传接口地址 默认值为 "api/Upload"
@@ -131,6 +141,12 @@ namespace BootstrapBlazor.Components
         public bool IsPhotoWall { get; set; }
 
         /// <summary>
+        /// 获得/设置 是否禁用 默认为 false
+        /// </summary>
+        [Parameter]
+        public bool IsDisabled { get; set; }
+
+        /// <summary>
         /// 获得/设置 允许上传文件扩展名集合
         /// </summary>
         [Parameter]
@@ -146,99 +162,61 @@ namespace BootstrapBlazor.Components
         /// 获得/设置 成功上传后回调委托
         /// </summary>
         [Parameter]
-        public Action<string>? OnUploaded { get; set; }
+        public Func<string, string, Task>? OnUploaded { get; set; }
 
         /// <summary>
         /// 获得/设置 成功删除后回调委托
         /// </summary>
         [Parameter]
-        public Action<string>? OnRemoved { get; set; }
+        public Func<string, Task>? OnRemoved { get; set; }
 
         /// <summary>
         /// 获得/设置 上传失败后回调委托
         /// </summary>
         [Parameter]
-        public Action<string>? OnFailed { get; set; }
+        public Func<string, Task>? OnFailed { get; set; }
 
         /// <summary>
-        /// OnAfterRender 方法
+        /// 获得/设置 设置请求头回调委托
         /// </summary>
-        /// <param name="firstRender"></param>
-        protected override void OnAfterRender(bool firstRender)
-        {
-            base.OnAfterRender(firstRender);
-
-            if (firstRender)
-            {
-                if (Interop == null && JSRuntime != null) Interop = new JSInterop<UploadBase>(JSRuntime);
-                Interop?.Invoke(this, UploaderElement, "uploader", nameof(Completed), nameof(CheckFiles), nameof(Removed), nameof(Failed));
-            }
-        }
+        [Parameter]
+        public Func<IEnumerable<UploadHeader>>? OnSetHeaders { get; set; }
 
         /// <summary>
         /// 文件上传成功后回调此方法
         /// </summary>
         [JSInvokable]
-        public void Completed(string fileName)
+        public async Task Completed(string fileName, string prevUrl)
         {
-            OnUploaded?.Invoke(fileName);
+            if (OnUploaded != null) await OnUploaded.Invoke(fileName, prevUrl);
         }
 
         /// <summary>
         /// 文件删除成功后回调此方法
         /// </summary>
         [JSInvokable]
-        public void Removed(string fileName)
+        public async Task Removed(string fileName)
         {
-            OnRemoved?.Invoke(fileName);
+            if (OnRemoved != null) await OnRemoved.Invoke(fileName);
         }
 
         /// <summary>
         /// 文件上传失败后回调此方法
         /// </summary>
         [JSInvokable]
-        public void Failed(string fileName)
+        public async Task Failed(string fileName)
         {
-            OnFailed?.Invoke(fileName);
+            if (OnFailed != null) await OnFailed.Invoke(fileName);
         }
 
         /// <summary>
-        /// 文件上传前检查文件扩展名时回调此方法
+        /// 设置 请求头方法
         /// </summary>
         /// <returns></returns>
         [JSInvokable]
-        public object CheckFiles(string fileName, string fileType, long fileSize)
+        public IEnumerable<UploadHeader> SetHeaders()
         {
-            var result = true;
-            string? message = null;
-
-            if (MaxFileLength > 0)
-            {
-                result = MaxFileLength > fileSize;
-                message = result ? null : "文件太大";
-            }
-
-            if(result)
-            {
-                // check file extensions
-                if(AllowFileType?.Contains("image", StringComparison.OrdinalIgnoreCase) ?? false)
-                {
-                    result = fileType.StartsWith("image", StringComparison.OrdinalIgnoreCase);
-                    message = result ? null : "只允许选择图片类型文件";
-                }
-            }
-
-            return new { result, message };
-        }
-
-        /// <summary>
-        /// Dispose 方法
-        /// </summary>
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-
-            if (disposing) Interop?.Dispose();
+            return OnSetHeaders?.Invoke() ?? new UploadHeader[0];
         }
     }
 }

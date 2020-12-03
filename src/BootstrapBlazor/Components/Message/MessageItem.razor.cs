@@ -1,4 +1,14 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
+using System.Threading.Tasks;
 
 namespace BootstrapBlazor.Components
 {
@@ -49,17 +59,14 @@ namespace BootstrapBlazor.Components
         /// OnAfterRender 方法
         /// </summary>
         /// <param name="firstRender"></param>
-        protected override void OnAfterRender(bool firstRender)
+        protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            base.OnAfterRender(firstRender);
+            await base.OnAfterRenderAsync(firstRender);
 
-            if (firstRender)
+            if (firstRender && Message != null)
             {
-                if (JSRuntime != null && Message != null)
-                {
-                    _interop = new JSInterop<MessageBase>(JSRuntime);
-                    _interop.Invoke(Message, MessageItemElement, "showMessage", nameof(MessageBase.Clear));
-                }
+                _interop = new JSInterop<MessageBase>(JSRuntime);
+                await _interop.Invoke(Message, MessageItemElement, "showMessage", nameof(MessageBase.Clear));
             }
         }
     }

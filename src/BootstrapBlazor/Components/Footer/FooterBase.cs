@@ -1,4 +1,13 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// **********************************
+// 框架名称：BootstrapBlazor 
+// 框架作者：Argo Zhang
+// 开源地址：
+// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
+// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
+// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
+// **********************************
+
+using Microsoft.AspNetCore.Components;
 
 namespace BootstrapBlazor.Components
 {
@@ -8,9 +17,12 @@ namespace BootstrapBlazor.Components
     public abstract class FooterBase : BootstrapComponentBase
     {
         /// <summary>
-        /// 获得/设置 Footer DOM 实例
+        /// 获得 按钮样式集合
         /// </summary>
-        protected ElementReference FooterElement { get; set; }
+        /// <returns></returns>
+        protected string? ClassName => CssBuilder.Default("footer")
+            .AddClassFromAttributes(AdditionalAttributes)
+            .Build();
 
         /// <summary>
         /// 获得/设置 Footer 显示文字
@@ -23,16 +35,5 @@ namespace BootstrapBlazor.Components
         /// </summary>
         [Parameter]
         public string? Target { get; set; }
-
-        /// <summary>
-        /// OnAfterRender 方法
-        /// </summary>
-        /// <param name="firstRender"></param>
-        protected override void OnAfterRender(bool firstRender)
-        {
-            base.OnAfterRender(firstRender);
-
-            if (firstRender) JSRuntime.Invoke(FooterElement, "footer", Target);
-        }
     }
 }
