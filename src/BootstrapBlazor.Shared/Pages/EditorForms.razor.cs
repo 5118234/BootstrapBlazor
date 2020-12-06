@@ -44,6 +44,17 @@ namespace BootstrapBlazor.Shared.Pages
             new SelectedItem("下棋", "下棋")
         };
 
+        private readonly List<SelectedItem> DummyItems = new List<SelectedItem>()
+        {
+            new SelectedItem("1", "1"),
+            new SelectedItem("2", "2"),
+            new SelectedItem("3", "3"),
+            new SelectedItem("4", "4"),
+            new SelectedItem("5", "5")
+        };
+
+        private int DummyId = 0;
+
         private IEnumerable<AttributeItem> GetAttributes() => new AttributeItem[]
         {
             // TODO: 移动到数据库中
@@ -71,9 +82,16 @@ namespace BootstrapBlazor.Shared.Pages
             new AttributeItem() {
                 Name = "ShowLabel",
                 Description = "是否显示 Label",
-                Type = "bool?",
-                ValueList = "null/true/false",
-                DefaultValue = "null"
+                Type = "bool",
+                ValueList = "true/false",
+                DefaultValue = "true"
+            },
+            new AttributeItem() {
+                Name = "AutoGenerateAllItem",
+                Description = "是否生成所有属性",
+                Type = "bool",
+                ValueList = "true/false",
+                DefaultValue = "true"
             }
         };
 

@@ -3,12 +3,30 @@
     "NoDataTip": "Keine Daten",
     "PlaceHolder": "Bitte eingeben"
   },
+  "BootstrapBlazor.Components.BarcodeReader": {
+    "ButtonScanText": "Scannen",
+    "ButtonStopText": "schließen",
+    "AutoStopText": "AutoSchließen",
+    "DeviceLabel": "Kamera",
+    "InitDevicesString": "Initialisierung ...",
+    "NotFoundDevicesString": "Nicht gefunden Videogerät"
+  },
   "BootstrapBlazor.Components.Captcha": {
     "HeaderText": "Captcha",
     "BarText": "Zum Ausfüllen des Puzzles nach rechts schieben",
     "FailedText": "Laden fehlgeschlagen",
     "LoadText": "Laden ...",
     "TryText": "Erneut versuchen"
+  },
+  "BootstrapBlazor.Components.Camera": {
+    "DeviceLabel": "Kamera",
+    "InitDevicesString": "Initialisierung ...",
+    "PlayText": "Öffnen",
+    "StopText": "Schließen",
+    "PhotoText": "Foto",
+    "FrontText": "Front",
+    "BackText": "zurück",
+    "NotFoundDevicesString": "Nicht gefunden Videogerät"
   },
   "BootstrapBlazor.Components.Calendar": {
     "PreviousMonth": "Vorheriger Monat",
@@ -35,8 +53,8 @@
     "DateTimePlaceHolderText": "Bitte auswählen ...",
     "DatePlaceHolderText": "Bitte auswählen ...",
     "TimeFormat": "hh\\:mm\\:ss",
-    "DateFormat": "M/T/JJJJ",
-    "DateTimeFormat": "M/T/JJJJ hh\\:mm\\:ss",
+    "DateFormat": "dd.MM.yyyy",
+    "DateTimeFormat": "dd.MM.yyyy hh\\:mm\\:ss",
     "AiraPrevYearLabel": "Vorheriges Jahr",
     "AiraNextYearLabel": "Nächstes Jahr",
     "AiraPrevMonthLabel": "Vorheriger Monat",

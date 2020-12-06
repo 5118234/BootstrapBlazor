@@ -3,12 +3,30 @@
     "NoDataTip": "無匹配數據",
     "PlaceHolder": "請輸入"
   },
+  "BootstrapBlazor.Components.BarcodeReader": {
+    "ButtonScanText": "掃描",
+    "ButtonStopText": "關閉",
+    "AutoStopText": "自动關閉",
+    "DeviceLabel": "攝像頭",
+    "InitDevicesString": "正在識別攝像頭",
+    "NotFoundDevicesString": "未找到視頻相關設備"
+  },
   "BootstrapBlazor.Components.Captcha": {
     "HeaderText": "請完成安全驗證",
     "BarText": "向右滑動填充拼圖",
     "FailedText": "加載失敗",
     "LoadText": "正在加載 ...",
     "TryText": "再試一次"
+  },
+  "BootstrapBlazor.Components.Camera": {
+    "DeviceLabel": "攝像頭",
+    "InitDevicesString": "正在識別攝像頭",
+    "PlayText": "開啟",
+    "StopText": "關閉",
+    "PhotoText": "拍照",
+    "FrontText": "前置",
+    "BackText": "後置",
+    "NotFoundDevicesString": "未找到視頻相關設備"
   },
   "BootstrapBlazor.Components.Calendar": {
     "PreviousMonth": "上一月",

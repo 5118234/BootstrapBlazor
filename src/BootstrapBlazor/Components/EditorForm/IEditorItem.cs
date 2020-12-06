@@ -20,7 +20,7 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 获得/设置 绑定列类型
         /// </summary>
-        Type FieldType { get; }
+        Type PropertyType { get; }
 
         /// <summary>
         /// 获得/设置 当前列是否可编辑 默认为 true 当设置为 false 时自动生成编辑 UI 不生成此列
@@ -35,7 +35,7 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 获得/设置 表头显示文字
         /// </summary>
-        public string? Text { get; set; }
+        string? Text { get; set; }
 
         /// <summary>
         /// 获得/设置 编辑模板

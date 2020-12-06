@@ -1685,6 +1685,20 @@ input:disabled,
         text-overflow: ellipsis;
     }
 
+.table-sm .table thead th .table-cell > .fa {
+    right: -5px;
+    top: -5px;
+    bottom: -5px;
+}
+
+.table-sm .table thead th.filterable .table-cell .fa-filter {
+    right: -5px;
+}
+
+.table-sm .table thead th.sortable.filterable .table-cell .fa-filter {
+    right: calc(1.5rem - 5px);
+}
+
 .is-clickable tbody tr,
 .is-clickable .table-row {
     cursor: pointer;
@@ -1902,6 +1916,12 @@ input:disabled,
     text-overflow: ellipsis;
 }
 
+    .table-cell.is-ellips.is-resizable {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+    }
+
 .table-loading {
     display: flex;
     justify-content: center;
@@ -1993,6 +2013,10 @@ input:disabled,
         border-top-width: 0;
     }
 
+    .table-fixed-column .table tbody tr:hover .fixed {
+        background-color: #e4e7ed;
+    }
+
 .table-striped.table-fixed-column tbody tr:nth-of-type(odd):not(:hover) .fixed,
 .table-striped.table-fixed-column .table-row:not(.active):nth-of-type(odd) .fixed {
     background-color: #fafafa;
@@ -2056,7 +2080,8 @@ input:disabled,
         padding: 1rem 0 0 0;
     }
 
-.table-resize thead th {
+.table-resize thead th,
+.table-resize tbody td {
     position: relative;
 }
 

@@ -184,14 +184,12 @@ namespace BootstrapBlazor.Shared.Shared
             item.AddItem(new DemoMenuItem()
             {
                 Text = "时间框 DateTimePicker",
-                Url = "datetimepickers",
-                IsUpdate = true
+                Url = "datetimepickers"
             });
             item.AddItem(new DemoMenuItem()
             {
                 Text = "时间范围框 DateTimeRange",
-                Url = "datetimeranges",
-                IsNew = true
+                Url = "datetimeranges"
             });
             item.AddItem(new DemoMenuItem()
             {
@@ -395,7 +393,8 @@ namespace BootstrapBlazor.Shared.Shared
             it.AddItem(new DemoMenuItem()
             {
                 Text = "列设置",
-                Url = "tables/column"
+                Url = "tables/column",
+                IsUpdate = true
             });
 
             it.AddItem(new DemoMenuItem()
@@ -437,7 +436,8 @@ namespace BootstrapBlazor.Shared.Shared
             it.AddItem(new DemoMenuItem()
             {
                 Text = "固定列",
-                Url = "tables/fix-column"
+                Url = "tables/fix-column",
+                IsUpdate = true
             });
 
             it.AddItem(new DemoMenuItem()
@@ -662,7 +662,7 @@ namespace BootstrapBlazor.Shared.Shared
 
         private void AddBadge(DemoMenuItem item, bool append = true, int? count = null)
         {
-            item.Component = CreateBadge(count ?? item.Items.Count(), item.IsNew);
+            item.Component = CreateBadge(count ?? item.Items.Count(), item.IsNew, item.IsUpdate);
             if (append) Menus.Add(item);
         }
 

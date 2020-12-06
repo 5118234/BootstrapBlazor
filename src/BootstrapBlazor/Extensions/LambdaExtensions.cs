@@ -144,8 +144,15 @@ namespace System.Linq
                     var p = Expression.Parameter(typeof(TItem));
                     var fieldExpression = Expression.Property(p, prop);
 
+                    Expression eq = fieldExpression;
+
                     // 可为空类型转化为具体类型
-                    var eq = filter.GetExpression(Expression.Convert(fieldExpression, filter.FieldValue.GetType()));
+                    if (prop.PropertyType.IsGenericType &&
+                        prop.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                    {
+                        eq = Expression.Convert(fieldExpression, prop.PropertyType.GenericTypeArguments[0]);
+                    }
+                    eq = filter.GetExpression(eq);
                     ret = Expression.Lambda<Func<TItem, bool>>(eq, p);
                 }
             }
@@ -173,14 +180,20 @@ namespace System.Linq
                 FilterAction.LessThanOrEqual => Expression.LessThanOrEqual(left, right),
                 FilterAction.Contains => left.Contains(right),
                 FilterAction.NotContains => Expression.Not(left.Contains(right)),
+                FilterAction.CustomPredicate => filter.FieldValue switch
+                {
+                    LambdaExpression t => Expression.Invoke(t, left),
+                    Delegate _ => Expression.Invoke(right, left),
+                    _ => throw new ArgumentException(nameof(FilterKeyValueAction.FieldValue))
+                },
                 _ => Expression.Empty()
             };
         }
 
         private static Expression Contains(this Expression left, Expression right)
         {
-            var method = typeof(LambdaExtensions).GetMethod("NullableContains", BindingFlags.Static | BindingFlags.NonPublic, null, new[] { typeof(string), typeof(string) }, null);
-            return Expression.Call(null, method!, left, right);
+            Expression<Func<string, string, bool>> expression = (l, r) => l != null && r != null && l.Contains(r);
+            return Expression.Invoke(expression, left, right);
         }
 
         private static bool NullableContains(string left, string right)

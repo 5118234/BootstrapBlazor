@@ -21,10 +21,19 @@ namespace BootstrapBlazor.Components
     public partial class Table<TItem>
     {
         /// <summary>
-        /// 获得 Checkbox 样式表集合
+        /// 获得 按钮列样式表集合
         /// </summary>
         /// <returns></returns>
-        protected string? ButtonColumnClass => CssBuilder.Default("table-th-button")
+        protected string? ExtendButtonsColumnClass => CssBuilder.Default("table-th-button")
+            .AddClass("fixed fixed-right", FixedExtendButtonsColumn)
+            .Build();
+
+        /// <summary>
+        /// 获得 按钮列样式表集合
+        /// </summary>
+        /// <returns></returns>
+        protected string? FixedExtendButtonsHeaderStyleString => CssBuilder.Default()
+            .AddClass("right: 0;", FixedExtendButtonsColumn)
             .Build();
 
         /// <summary>
@@ -159,6 +168,12 @@ namespace BootstrapBlazor.Components
         /// </summary>
         [Parameter]
         public bool DoubleClickToEdit { get; set; }
+
+        /// <summary>
+        /// 获得/设置 是否自动生成列信息 默认为 false
+        /// </summary>
+        [Parameter]
+        public bool AutoGenerateColumns { get; set; }
 
         /// <summary>
         /// 单选模式下选择行时调用此方法

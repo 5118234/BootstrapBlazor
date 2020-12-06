@@ -3,12 +3,30 @@
     "NoDataTip": "No Data",
     "PlaceHolder": "Please Input"
   },
+  "BootstrapBlazor.Components.BarcodeReader": {
+    "ButtonScanText": "Scan",
+    "ButtonStopText": "Close",
+    "AutoStopText": "AutoClose",
+    "DeviceLabel": "Camera",
+    "InitDevicesString": "Initialzie ...",
+    "NotFoundDevicesString": "Not found video device"
+  },
   "BootstrapBlazor.Components.Captcha": {
     "HeaderText": "Captcha",
     "BarText": "Slide right to fill puzzle",
     "FailedText": "Load failed",
     "LoadText": "Loading ...",
     "TryText": "Try again"
+  },
+  "BootstrapBlazor.Components.Camera": {
+    "DeviceLabel": "Camera",
+    "InitDevicesString": "Initialzie ...",
+    "PlayText": "Open",
+    "StopText": "Close",
+    "PhotoText": "Photo",
+    "FrontText": "Front",
+    "BackText": "Back",
+    "NotFoundDevicesString": "Not found video device"
   },
   "BootstrapBlazor.Components.Calendar": {
     "PreviousMonth": "Previous Month",

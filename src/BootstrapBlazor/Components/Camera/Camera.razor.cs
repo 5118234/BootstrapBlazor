@@ -8,9 +8,11 @@
 // **********************************
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -33,16 +35,33 @@ namespace BootstrapBlazor.Components
 
         private IEnumerable<SelectedItem> Devices { get; set; } = Enumerable.Empty<SelectedItem>();
 
-        private IEnumerable<SelectedItem> Cameras { get; set; } = new SelectedItem[]
-        {
-            new SelectedItem { Text = "前置", Value = "user", Active = true },
-            new SelectedItem { Text = "后置", Value = "environment" }
-        };
+        [NotNull]
+        private IEnumerable<SelectedItem>? Cameras { get; set; }
 
         private SelectedItem? ActiveCamera { get; set; }
 
         /// <summary>
-        /// 获得/设置 是否显示 照片预览
+        /// 获得/设置 是否自动开启摄像头 默认为 false
+        /// </summary>
+        [Parameter]
+        public bool AutoStart { get; set; }
+
+        /// <summary>
+        /// 获得/设置 前置摄像头显示文本 默认前置
+        /// </summary>
+        [Parameter]
+        [NotNull]
+        public string? FrontText { get; set; }
+
+        /// <summary>
+        /// 获得/设置 后置摄像头显示文本 默认后置
+        /// </summary>
+        [Parameter]
+        [NotNull]
+        public string? BackText { get; set; }
+
+        /// <summary>
+        /// 获得/设置 是否显示 照片预览 默认为 false 不预览
         /// </summary>
         [Parameter]
         public bool ShowPreview { get; set; }
@@ -51,13 +70,15 @@ namespace BootstrapBlazor.Components
         /// 获得/设置 设备列表前置标签文字 默认为 摄像头
         /// </summary>
         [Parameter]
-        public string DeviceLabel { get; set; } = "摄像头";
+        [NotNull]
+        public string? DeviceLabel { get; set; }
 
         /// <summary>
         /// 获得/设置 初始化设备列表文字 默认为 正在识别摄像头
         /// </summary>
         [Parameter]
-        public string InitDevicesString { get; set; } = "正在识别摄像头";
+        [NotNull]
+        public string? InitDevicesString { get; set; }
 
         /// <summary>
         /// 获得/设置 初始化摄像头回调方法
@@ -84,10 +105,65 @@ namespace BootstrapBlazor.Components
         public Func<Task>? OnClose { get; set; }
 
         /// <summary>
-        /// 获得/设置 开始扫码回调方法
+        /// 获得/设置 扫码成功回调方法
         /// </summary>
         [Parameter]
         public Func<Task>? OnCapture { get; set; }
+
+        /// <summary>
+        /// 获得/设置 开启按钮显示文本 默认为开启
+        /// </summary>
+        [NotNull]
+        [Parameter]
+        public string? PlayText { get; set; }
+
+        /// <summary>
+        /// 获得/设置 关闭按钮显示文本 默认为关闭
+        /// </summary>
+        [NotNull]
+        [Parameter]
+        public string? StopText { get; set; }
+
+        /// <summary>
+        /// 获得/设置 拍照按钮显示文本 默认为拍照
+        /// </summary>
+        [NotNull]
+        [Parameter]
+        public string? PhotoText { get; set; }
+
+        /// <summary>
+        /// 获得/设置 未找到视频相关设备文字 默认为 未找到视频相关设备
+        /// </summary>
+        [Parameter]
+        [NotNull]
+        public string? NotFoundDevicesString { get; set; }
+
+        [Inject]
+        [NotNull]
+        private IStringLocalizer<Camera>? Localizer { get; set; }
+
+        /// <summary>
+        /// OnInitialized 方法
+        /// </summary>
+        protected override void OnInitialized()
+        {
+            base.OnInitialized();
+
+            PlayText ??= Localizer[nameof(PlayText)];
+            StopText ??= Localizer[nameof(StopText)];
+            PhotoText ??= Localizer[nameof(PhotoText)];
+            DeviceLabel ??= Localizer[nameof(DeviceLabel)];
+            InitDevicesString ??= Localizer[nameof(InitDevicesString)];
+            NotFoundDevicesString ??= Localizer[nameof(NotFoundDevicesString)];
+            FrontText ??= Localizer[nameof(FrontText)];
+            BackText ??= Localizer[nameof(BackText)];
+
+            Cameras = new SelectedItem[]
+            {
+                new SelectedItem { Text = FrontText!, Value = "user", Active = true },
+                new SelectedItem { Text = BackText!, Value = "environment" }
+            };
+        }
 
         /// <summary>
         /// OnAfterRenderAsync 方法
@@ -101,7 +177,7 @@ namespace BootstrapBlazor.Components
             if (firstRender && JSRuntime != null)
             {
                 Interop = new JSInterop<Camera>(JSRuntime);
-                await Interop.Invoke(this, CameraElement, "bb_camera", "init");
+                await Interop.Invoke(this, CameraElement, "bb_camera", "init", AutoStart);
             }
         }
 
@@ -130,6 +206,8 @@ namespace BootstrapBlazor.Components
                 Disabled = false;
                 ActiveCamera = Cameras.First();
             }
+
+            if (Disabled) InitDevicesString = NotFoundDevicesString;
             StateHasChanged();
         }
 
