@@ -1,11 +1,6 @@
-﻿// **********************************
-// 框架名称：BootstrapBlazor 
-// 框架作者：Argo Zhang
-// 开源地址：
-// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
-// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
-// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
-// **********************************
+﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Website: https://www.blazor.zone or https://argozhang.github.io/
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -98,31 +93,23 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 高级查询按钮点击时调用此方法
         /// </summary>
-        protected Task ShowSearchDialog()
+        protected async Task ShowSearchDialog()
         {
-            // 弹出高级查询弹窗
-            DialogOption.IsScrolling = ScrollingDialogContent;
-            DialogOption.Size = Size.ExtraLarge;
-            DialogOption.Title = SearchModalTitle;
-            DialogOption.ShowCloseButton = false;
-            DialogOption.ShowFooter = false;
+            var option = new SearchDialogOption<TItem>()
+            {
+                IsScrolling = ScrollingDialogContent,
+                Title = SearchModalTitle,
+                Model = SearchModel,
+                DialogBodyTemplate = SearchTemplate,
+                OnResetSearchClick = ResetSearchClick,
+                OnSearchClick = SearchClick
+            };
 
             var columns = Columns.Where(i => i.Searchable).ToList();
-            columns.ForEach(i => i.EditTemplate = i.SearchTemplate);
-            var editorParameters = new List<KeyValuePair<string, object>>
-            {
-                new KeyValuePair<string, object>(nameof(TableSearchDialog<TItem>.Model), SearchModel),
-                new KeyValuePair<string, object>(nameof(TableSearchDialog<TItem>.Columns), columns),
-                new KeyValuePair<string, object>(nameof(TableSearchDialog<TItem>.ShowLabel), true),
-                new KeyValuePair<string, object>(nameof(TableSearchDialog<TItem>.BodyTemplate), SearchTemplate!),
-                new KeyValuePair<string, object>(nameof(TableSearchDialog<TItem>.OnResetSearchClick), new Func<Task>(ResetSearchClick)),
-                new KeyValuePair<string, object>(nameof(TableSearchDialog<TItem>.OnSearchClick), new Func<Task>(SearchClick)),
-            };
-            DialogOption.Component = DynamicComponent.CreateComponent<TableSearchDialog<TItem>>(editorParameters);
+            columns.ForEach(col => col.EditTemplate = col.SearchTemplate);
+            option.Items = columns;
 
-            DialogService.Show(DialogOption);
-
-            return Task.CompletedTask;
+            await DialogService.ShowSearchDialog(option);
         }
 
         /// <summary>

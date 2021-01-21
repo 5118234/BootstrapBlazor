@@ -1,16 +1,12 @@
-﻿// **********************************
-// 框架名称：BootstrapBlazor 
-// 框架作者：Argo Zhang
-// 开源地址：
-// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
-// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
-// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
-// **********************************
+﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Website: https://www.blazor.zone or https://argozhang.github.io/
 
 using BootstrapBlazor.Components;
 using BootstrapBlazor.Shared.Common;
 using Microsoft.JSInterop;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
 namespace BootstrapBlazor.Shared.Pages
@@ -20,6 +16,7 @@ namespace BootstrapBlazor.Shared.Pages
     /// </summary>
     public sealed partial class Toasts
     {
+        [NotNull]
         private Toast? Toast { get; set; }
 
         /// <summary>
@@ -39,10 +36,10 @@ namespace BootstrapBlazor.Shared.Pages
         /// 
         /// </summary>
         /// <param name="placement"></param>
-        private void OnPlacementClick(Placement placement)
+        private async Task OnPlacementClick(Placement placement)
         {
-            Toast?.SetPlacement(placement);
-            ToastService?.Show(new ToastOption()
+            Toast.SetPlacement(placement);
+            await ToastService.Show(new ToastOption()
             {
                 Host = Toast,
                 Category = ToastCategory.Information,
@@ -54,10 +51,10 @@ namespace BootstrapBlazor.Shared.Pages
         /// <summary>
         /// 
         /// </summary>
-        private void OnSuccessClick()
+        private async Task OnSuccessClick()
         {
-            Toast?.SetPlacement(Placement.BottomEnd);
-            ToastService?.Show(new ToastOption()
+            Toast.SetPlacement(Placement.BottomEnd);
+            await ToastService.Show(new ToastOption()
             {
                 Category = ToastCategory.Success,
                 Title = "保存成功",
@@ -68,10 +65,10 @@ namespace BootstrapBlazor.Shared.Pages
         /// <summary>
         /// 
         /// </summary>
-        private void OnErrorClick()
+        private async Task OnErrorClick()
         {
-            Toast?.SetPlacement(Placement.BottomEnd);
-            ToastService?.Show(new ToastOption()
+            Toast.SetPlacement(Placement.BottomEnd);
+            await ToastService.Show(new ToastOption()
             {
                 Category = ToastCategory.Error,
                 Title = "保存失败",
@@ -82,10 +79,10 @@ namespace BootstrapBlazor.Shared.Pages
         /// <summary>
         /// 
         /// </summary>
-        private void OnInfoClick()
+        private async Task OnInfoClick()
         {
-            Toast?.SetPlacement(Placement.BottomEnd);
-            ToastService?.Show(new ToastOption()
+            Toast.SetPlacement(Placement.BottomEnd);
+            await ToastService.Show(new ToastOption()
             {
                 Category = ToastCategory.Information,
                 Title = "消息通知",
@@ -96,10 +93,10 @@ namespace BootstrapBlazor.Shared.Pages
         /// <summary>
         /// 
         /// </summary>
-        private void OnNotAutoHideClick()
+        private async Task OnNotAutoHideClick()
         {
-            Toast?.SetPlacement(Placement.BottomEnd);
-            ToastService?.Show(new ToastOption()
+            Toast.SetPlacement(Placement.BottomEnd);
+            await ToastService.Show(new ToastOption()
             {
                 Category = ToastCategory.Information,
                 IsAutoHide = false,

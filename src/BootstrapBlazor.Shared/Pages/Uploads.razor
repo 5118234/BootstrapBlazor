@@ -4,120 +4,110 @@
 
 <h4>通过点击或者拖拽上传文件</h4>
 
-<p>
-    由于上传组件上传文件的大小受后台程序、反向代理等诸多因素影响，相关文章请参阅 <a href="https://gitee.com/LongbowEnterprise/BootstrapBlazor/wikis/Upload%20%E7%BB%84%E4%BB%B6%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9?sort_id=2166580" target="_blank">Upload 组件注意事项</a>
-    <br>出于服务器安全考虑，以下组件示例中上传文件均限制为文件类型必须为 <code>image/*</code> ，文件大小被限制为不能超过 <code>20 MB</code>
-</p>
-
-<p>
-    上传组件需要设置上传接收的接口，如果未设置时上传默认使用 <code>api/Upload</code> 的 <code>Post</code> 方法，删除使用 <code>Delete</code> 方法
-</p>
-
-<Block Title="直接上传" Introduction="通过点击上传框弹出文件选择框，选择文件后上传，上传成功后右上角出现绿色小对勾" CodeFile="upload.1.html">
-    <p>仅允许上传 <code>images/*</code> 格式文件，文件大小不能超过 <code>20 MB</code></p>
-    <Upload AllowFileType="@AllowFiles" MaxFileLength="20971520" OnUploaded="@OnUpload" OnRemoved="@OnRemoved"></Upload>
-    <Logger @ref="Trace" class="mt-3" />
-</Block>
-
-<Block Title="预览后上传" Introduction="通过设置 <code>ShowPreview</code> 属性开启本地预览，点击上传按钮开始上传" CodeFile="upload.2.html">
-    <p>仅允许上传 <code>images/*</code> 格式文件，文件大小不能超过 <code>20 MB</code></p>
-    <Upload AllowFileType="@AllowFiles" MaxFileLength="20971520" ShowPreview="true" OnUploaded="@OnPreviewUpload"></Upload>
-    <Logger @ref="PreviewUpload" class="mt-3" />
-</Block>
-
-<Block Title="头像框上传组件" Introduction="通过设置 <code>IsCircle</code> 属性使图片框显示为圆形，上传时显示圆形进度条，上传完毕后进度条变为蓝色" CodeFile="upload.3.html">
-    <p>仅允许上传 <code>images/*</code> 格式文件，文件大小不能超过 <code>20 MB</code></p>
+<Block Title="基本用法" Introduction="与其他表单组件一起使用，显示文件名称，点击 <b>浏览</b> 按钮后选择文件并上传；通过设置 <code>ShowRemoveButton</code> 参数，显示 <b>删除</b> 按钮，点击删除按钮时回调 <code>OnDelete</code> 委托方法" CodeFile="upload.1.html">
     <div class="form-inline">
         <div class="row">
-            <div class="form-group col-6 col-sm-auto">
-                <Upload AllowFileType="@AllowFiles" MaxFileLength="20971520" IsCircle="true"></Upload>
+            <div class="form-group col-12 col-sm-6">
+                <label for="text1" class="control-label">姓名:</label>
+                <input id="text1" class="form-control">
             </div>
-            <div class="form-group col-6 col-sm-auto">
-                <div class="upload is-circle">
-                    <div class="upload-prev is-valid" style="width: 100px; height: 100px;">
-                        <img src="_content/BootstrapBlazor.Shared/images/fork.png">
-                        <span class="upload-item-actions">
-                            <span class="upload-item-delete">
-                                <i class="fa fa-trash-o"></i>
-                            </span>
-                        </span>
-                        <svg class="upload-item-circle" style="width: 100px; height: 100px;">
-                            <circle r="48" cy="50" cx="50" stroke-width="2" stroke="#EAEFF4" stroke-linejoin="round" stroke-linecap="round" fill="none"></circle>
-                            <circle class="upload-item-circle-progress" r="48" cy="50" cx="50" data-dash="314.16" stroke-dashoffset="0" stroke-dasharray="314.16,314.16" stroke-width="2" stroke="#1593FF" stroke-linejoin="round" stroke-linecap="round" fill="none"></circle><!--!-->
-                        </svg>
-                    </div>
-                </div>
+            <div class="form-group col-12 col-sm-6">
+                <label for="text2" class="control-label">地址:</label>
+                <input id="text2" class="form-control">
             </div>
+            <div class="form-group col-12">
+                <label for="text3" class="control-label">照片:</label>
+                <Upload Id="text3" ShowDeleteButton="true" OnChange="@OnFileChange" OnDelete="@OnFileDelete"></Upload>
+            </div>
+        </div>
+    </div>
+    <Logger @ref="Trace" />
+</Block>
+
+<Block Title="点击上传" Introduction="经典款式，用户点击按钮弹出文件选择框。" CodeFile="upload.2.html">
+    <div class="row">
+        <div class="col-12 col-sm-6">
+            <Upload Style="UploadStyle.ClickToUpload" ShowProgress="true" OnChange="@OnClickToUpload" OnDelete="@(fileName => Task.FromResult(true))"></Upload>
+        </div>
+    </div>
+    <p>设置 <code>IsSingle</code> 时，仅可以上传一张图片或者文件</p>
+    <div class="row mt-3">
+        <div class="col-12 col-sm-6">
+            <Upload Style="UploadStyle.ClickToUpload" IsSingle="true" OnChange="@OnClickToUpload" OnDelete="@(fileName => Task.FromResult(true))"></Upload>
         </div>
     </div>
 </Block>
 
-<Block Title="设置上传文件格式" Introduction="通过设置 <code>AllowFileType</code> 与 <code>MaxFileLength</code> 属性开启文件类型或者文件大小过滤功能" CodeFile="upload.4.html">
-    <p>仅允许上传 <code>images/*</code> 格式文件，文件大小不能超过 <code>20 MB</code></p>
-    <Upload AllowFileType="@AllowFiles" MaxFileLength="20971520"></Upload>
+<Block Title="已上传文件列表" Introduction="使用 <code>DefaultFileList</code> 设置已上传的内容" CodeFile="upload.3.html">
+    <div class="row">
+        <div class="col-12 col-sm-6">
+            <Upload Style="UploadStyle.ClickToUpload" OnDelete="@(fileName => Task.FromResult(true))" DefaultFileList="@DefaultFormatFileList"></Upload>
+        </div>
+    </div>
 </Block>
 
-<Block Title="照片墙功能" Introduction="通过设置 <code>IsPhotoWall</code> 属性开启照片墙效果，文件检查合规后自动出现下一个照片上传组件" CodeFile="upload.5.html">
-    <p>仅允许上传 <code>images/*</code> 格式文件，文件大小不能超过 <code>20 MB</code></p>
-    <Upload AllowFileType="@AllowFiles" MaxFileLength="20971520" IsPhotoWall="true"></Upload>
+<Block Title="上传文件夹" Introduction="使用 <code>DefaultFileList</code> 设置已上传的内容" CodeFile="upload.4.html">
+    <p>上传整个文件夹功能请设置 <code>MaxFileCount</code> 参数，默认值为 10</p>
+    <div class="row">
+        <div class="col-12 col-sm-6">
+            <Upload Style="UploadStyle.ClickToUpload" IsDirectory="true" MaxFileCount="100" OnChange="@OnUploadFolder" OnDelete="@(fileName => Task.FromResult(true))"></Upload>
+        </div>
+    </div>
 </Block>
 
-<Block Title="圆形照片墙功能" Introduction="通过设置 <code>IsPhotoWall</code> 和 <code>IsCircle</code> 属性开启照片墙效果，文件检查合规后自动出现下一个照片上传组件" CodeFile="upload.6.html">
-    <p>仅允许上传 <code>images/*</code> 格式文件，文件大小不能超过 <code>20 MB</code></p>
-    <Upload AllowFileType="@AllowFiles" MaxFileLength="20971520" IsPhotoWall="true" IsCircle="true"></Upload>
+<Block Title="用户头像上传" Introduction="使用 <code>OnChange</code> 限制用户上传的图片格式和大小。本例中仅允许上传 <code>jpg/png/bmp/jpeg/gif</code> 五种图片格式" CodeFile="upload.5.html">
+    <div class="row">
+        <div class="col-12">
+            <p>卡片形式头像框</p>
+            <Upload Style="UploadStyle.Avatar" Accept="image/*" OnChange="@OnAvatarUpload" OnDelete="@(fileName => Task.FromResult(true))"></Upload>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-12">
+            <p>圆形头像框</p>
+            <Upload Style="UploadStyle.Avatar" Accept="image/*" ShowProgress="true" IsCircle="true" OnChange="@OnAvatarUpload" OnDelete="@(fileName => Task.FromResult(true))"></Upload>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-12">
+            <p>设置 <code>IsSingle</code> 时，仅可以上传一张图片或者文件</p>
+            <Upload Style="UploadStyle.Avatar" IsSingle="true" OnChange="@OnAvatarUpload" OnDelete="@(fileName => Task.FromResult(true))"></Upload>
+            <p>
+                <div>组件提供了 <code>Accept</code> 属性用于设置上传文件过滤功能，本例中圆形头像框接受 GIF 和 JPEG 两种图像，设置 <code>Accept="image/gif, image/jpeg"</code>，如果不限制图像的格式，可以写为：<code>Accept="image/*"</code>，该属性并不安全还是应该是使用 <b>服务器端验证</b> 进行文件格式验证</div>
+            </p>
+            <p>相关文档：<a href="https://www.runoob.com/tags/att-input-accept.html" target="_blank">[Accept 属性详解]</a> <a href="http://www.iana.org/assignments/media-types/media-types.xhtml" target="_blank">[Media Types 详细列表]</a></p>
+            <Upload Style="UploadStyle.Avatar" Accept="image/gif, image/jpeg" IsSingle="true" OnChange="@OnAvatarUpload" OnDelete="@(fileName => Task.FromResult(true))"></Upload>
+        </div>
+    </div>
 </Block>
 
-<Block Title="卡片式预览" Introduction="通过设置 <code>IsCard</code> 属性开启卡片式照片预览效果" CodeFile="upload.7.html">
-    <p>允许上传任意格式文件，文件大小不能超过 <code>20 MB</code></p>
-    <Upload MaxFileLength="20971520" Width="240" Height="280" IsCard="true" IsPhotoWall="true"></Upload>
+<Block Title="预览卡片式" Introduction="设置参数为 <code>UploadStyle.Card</code> 时，组件呈现为卡片式带预览模式" CodeFile="upload.6.html">
+    <p>
+        <div><code>Server Side</code> 模式中可以使用 <code>IWebHostEnviroment</code> 注入服务获取到 <code>wwwwroot</code> 目录，保存文件到 <code>images\uploader</code> 中，此功能无需 <b>MVC</b> 的控制器辅助进行文件的保存，直接调用 <code>SaveToFile</code> 方法即可</div>
+        <div><code>wasm</code> 模式中无法使用 <code>IWebHostEnviroment</code> 需要调用 <code>webapi</code> 接口等形式将文件保存到服务器端</div>
+        <div>有兴趣的同学可以通过开源仓库中的 <code>wiki</code> 文档中相关资源查看关于 <code>Upload</code> 组件的相关知识技巧 <a href="@SiteOptions.VideoLibUrl" target="_blank">[传送门]</a></div>
+        <div>本例中通过服务器端验证当文件大小超过 <code>200MB</code> 时，提示文件太大提示信息</div>
+    </p>
+    <div class="row">
+        <div class="col-12">
+            <p>本例中设置 <code>ShowProgress=true</code> 显示上传进度条</p>
+            <Upload Style="UploadStyle.Card" ShowProgress="true" OnChange="@OnCardUpload" OnDelete="@(fileName => Task.FromResult(true))"></Upload>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-12">
+            <p>设置 <code>IsSingle</code> 时，仅可以上传一张图片或者文件</p>
+            <Upload Style="UploadStyle.Card" IsSingle="true" OnChange="@OnCardUpload" OnDelete="@(fileName => Task.FromResult(true))"></Upload>
+        </div>
+    </div>
 </Block>
 
-<Block Title="多选文件" Introduction="通过设置 <code>IsMultiple</code> 属性开启上传文件多选功能" CodeFile="upload.8.html">
-    <p>允许上传任意格式文件，文件大小不能超过 <code>20 MB</code></p>
-    <Upload MaxFileLength="20971520" Width="240" Height="280" IsCard="true" IsMultiple="true"></Upload>
+<Block Title="文件图标" Introduction="不同文件格式显示的图标不同" CodeFile="upload.7.html">
+    <Upload Style="UploadStyle.Card" DefaultFileList="@DefaultFormatFileList" OnChange="@OnCardUpload" OnDelete="@(fileName => Task.FromResult(true))"></Upload>
 </Block>
 
-<Block Title="卡片式文件上传进度" Introduction="通过设置 <code>IsCard</code> <code>ShowProgress</code> 属性开启卡片式文件上传进度预览功能" CodeFile="upload.9.html">
-    <p>允许上传任意格式文件，文件大小不能超过 <code>20 MB</code></p>
-    <Upload MaxFileLength="20971520" Width="240" Height="280" IsCard="true" ShowProgress="true"></Upload>
-</Block>
-
-<Block Title="堆栈式文件上传进度" Introduction="通过设置 <code>IsStack</code> <code>ShowProgress</code> 属性开启堆栈式文件上传进度预览功能，适合大文件上传，文件大于 <code>1 MB</code> 后开始上传速率显示" CodeFile="upload.10.html">
-    <p>允许上传任意格式文件，文件大小不能超过 <code>20 MB</code>，可多选</p>
-    <Upload MaxFileLength="20971520" IsStack="true" ShowProgress="true" Text="点击选择文件"></Upload>
-</Block>
-
-<Block Title="请求前设置请求头" Introduction="通过设置 <code>OnSetHeaders</code> 属性控制上传文件前设置请求头信息，返回值为 <code>NameValueHeaderValue</code> 集合" CodeFile="upload.11.html">
-    <p>本例中通过后台代码设置请求头 <code>Request Headers</code> 设置请求头 <code>Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</code> 可以通过 F12 浏览器开发工具查看请求明细</p>
-    <p>本示例为经典的 <code>JWT</code> 认证模式请求 webapi 示例</p>
-    <Upload AllowFileType="@AllowFiles" MaxFileLength="20971520" OnSetHeaders="@OnSetHeaders"></Upload>
-</Block>
-
-<Block Title="重置上传组件" Introduction="通过调用组件 <code>Reset</code> 方法，或者设置 <code>ShowReset</code> 属性显示重置按钮" CodeFile="upload.12.html">
-    <p>允许上传任意格式文件，文件大小不能超过 <code>20 MB</code>，可多选</p>
-    <Upload MaxFileLength="20971520" IsStack="true" ShowProgress="true" Text="点击选择文件" ShowReset="true"></Upload>
-</Block>
-
-<Block Title="禁用" Introduction="设置 <code>IsDisabled</code> 属性值为 <code>true</code> 时，组件禁止输入" CodeFile="upload.13.html">
-    <Divider Text="默认模式" />
-    <Upload IsDisabled="true"></Upload>
-    <Divider Text="显示预览模式" />
-    <Upload IsDisabled="true" ShowPreview="true"></Upload>
-    <Divider Text="圆形模式" />
-    <Upload IsDisabled="true" IsCircle="true"></Upload>
-    <Divider Text="卡片模式" />
-    <Upload IsDisabled="true" Width="240" Height="280" IsCard="true" IsPhotoWall="true"></Upload>
-    <Divider Text="堆栈模式" />
-    <Upload IsDisabled="true" IsStack="true" ShowProgress="true" Text="点击选择文件"></Upload>
-</Block>
-
-<Block Title="初始化图片地址" Introduction="通过设置组件 <code>ImageUrl</code> 属性值对组件显示图片进行初始化" CodeFile="upload.14.html">
-    <p>本例通过设置 <code>ImageUrl</code> 设置组件默认显示的已经上传的图片，由于是演示系统，图片可能不存在，所以图片是裂开的</p>
-    <Upload ImageUrl="images/Uploader/UIT.png"></Upload>
-</Block>
+<Toast />
 
 <AttributeTable Items="@GetAttributes()" />
 
 <EventTable Items="@GetEvents()" />
-
-<MethodTable Items="@GetMethods()" />

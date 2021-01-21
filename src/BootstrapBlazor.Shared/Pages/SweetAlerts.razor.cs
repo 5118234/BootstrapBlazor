@@ -1,11 +1,6 @@
-﻿// **********************************
-// 框架名称：BootstrapBlazor 
-// 框架作者：Argo Zhang
-// 开源地址：
-// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
-// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
-// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
-// **********************************
+﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Website: https://www.blazor.zone or https://argozhang.github.io/
 
 using BootstrapBlazor.Components;
 using BootstrapBlazor.Shared.Common;
@@ -22,37 +17,25 @@ namespace BootstrapBlazor.Shared.Pages
     /// </summary>
     public sealed partial class SweetAlerts
     {
-        private Task OnSwal(SwalCategory cate)
+        private Task OnSwal(SwalCategory cate) => SwalService.Show(new SwalOption()
         {
-            SwalService.Show(new SwalOption()
-            {
-                Category = cate,
-                Title = "Sweet 弹窗"
-            });
-            return Task.CompletedTask;
-        }
+            Category = cate,
+            Title = "Sweet 弹窗"
+        });
 
-        private Task ShowTitle()
+        private Task ShowTitle() => SwalService.Show(new SwalOption()
         {
-            SwalService.Show(new SwalOption()
-            {
-                Category = SwalCategory.Success,
-                Title = "我是 Title"
-            });
-            return Task.CompletedTask;
-        }
+            Category = SwalCategory.Success,
+            Title = "我是 Title"
+        });
 
-        private Task ShowContent()
+        private Task ShowContent() => SwalService.Show(new SwalOption()
         {
-            SwalService.Show(new SwalOption()
-            {
-                Category = SwalCategory.Success,
-                Content = "我是 Content"
-            });
-            return Task.CompletedTask;
-        }
+            Category = SwalCategory.Success,
+            Content = "我是 Content"
+        });
 
-        private Task ShowButtons()
+        private async Task ShowButtons()
         {
             var op = new SwalOption()
             {
@@ -68,11 +51,10 @@ namespace BootstrapBlazor.Shared.Pages
                 builder.AddAttribute(2, nameof(Button.OnClick), EventCallback.Factory.Create<MouseEventArgs>(this, async () => await op.Close()));
                 builder.CloseComponent();
             });
-            SwalService.Show(op);
-            return Task.CompletedTask;
+            await SwalService.Show(op);
         }
 
-        private Task ShowComponent()
+        private async Task ShowComponent()
         {
             var op = new SwalOption()
             {
@@ -85,11 +67,10 @@ namespace BootstrapBlazor.Shared.Pages
                     builder.CloseElement();
                 })
             };
-            SwalService.Show(op);
-            return Task.CompletedTask;
+            await SwalService.Show(op);
         }
 
-        private Task ShowFooterComponent()
+        private async Task ShowFooterComponent()
         {
             var op = new SwalOption()
             {
@@ -99,11 +80,10 @@ namespace BootstrapBlazor.Shared.Pages
                 ShowFooter = true,
                 FooterTemplate = DynamicComponent.CreateComponent<SwalFooter>().Render()
             };
-            SwalService.Show(op);
-            return Task.CompletedTask;
+            await SwalService.Show(op);
         }
 
-        private Task ShowAutoCloseSwal()
+        private async Task ShowAutoCloseSwal()
         {
             var op = new SwalOption()
             {
@@ -115,8 +95,7 @@ namespace BootstrapBlazor.Shared.Pages
                 Delay = 4000,
                 FooterTemplate = DynamicComponent.CreateComponent<SwalFooter>().Render()
             };
-            SwalService.Show(op);
-            return Task.CompletedTask;
+            await SwalService.Show(op);
         }
 
         private Logger? Trace { get; set; }

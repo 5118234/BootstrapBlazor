@@ -1,11 +1,6 @@
-﻿// **********************************
-// 框架名称：BootstrapBlazor 
-// 框架作者：Argo Zhang
-// 开源地址：
-// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
-// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
-// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
-// **********************************
+﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Website: https://www.blazor.zone or https://argozhang.github.io/
 
 using BootstrapBlazor.Components;
 using BootstrapBlazor.Shared.Common;
@@ -20,6 +15,12 @@ namespace BootstrapBlazor.Shared.Pages
     public sealed partial class Editors
     {
         private string EditorValue { get; set; } = "初始值 <b>Test</b>";
+
+        private Task OnValueChanged(string val)
+        {
+            EditorValue = val;
+            return Task.CompletedTask;
+        }
 
         private void SetValue()
         {
@@ -53,8 +54,10 @@ namespace BootstrapBlazor.Shared.Pages
                     Content = "点击插件按钮后弹窗并确认后才进行下一步处理",
                     IsConfirm = true
                 };
-                await SwalService.ShowModal(op);
-                ret = "从plugin1返回的数据";
+                if (await SwalService.ShowModal(op))
+                {
+                    ret = "<div class='text-danger'>从plugin1返回的数据</div>";
+                }
             }
             if (pluginItemName == "plugin2")
             {
@@ -64,8 +67,10 @@ namespace BootstrapBlazor.Shared.Pages
                     Content = "点击插件按钮后弹窗并确认后才进行下一步处理",
                     IsConfirm = true
                 };
-                await SwalService.ShowModal(op);
-                ret = "从plugin2返回的数据";
+                if (await SwalService.ShowModal(op))
+                {
+                    ret = "从plugin2返回的数据";
+                }
             }
             return ret;
         }

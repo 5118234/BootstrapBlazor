@@ -1,13 +1,9 @@
-﻿// **********************************
-// 框架名称：BootstrapBlazor 
-// 框架作者：Argo Zhang
-// 开源地址：
-// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
-// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
-// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
-// **********************************
+﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Website: https://www.blazor.zone or https://argozhang.github.io/
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -82,28 +78,30 @@ namespace BootstrapBlazor.Components
             {
                 parameters.Add(new KeyValuePair<string, object>(nameof(ModalDialogBase.BodyTemplate), option.Component.Render()));
             }
+            else
+            {
+                parameters.Add(new KeyValuePair<string, object>(nameof(ModalDialogBase.BodyTemplate), DynamicComponent.CreateComponent<Empty>().Render()));
+            }
 
             if (option.FooterTemplate != null)
             {
                 parameters.Add(new KeyValuePair<string, object>(nameof(ModalDialogBase.FooterTemplate), option.FooterTemplate));
             }
 
-            // 不保持状态
             parameters.Add(new KeyValuePair<string, object>(nameof(ModalDialogBase.OnClose), new Func<Task>(async () =>
             {
-                if (!option.KeepChildrenState)
-                {
-                    await ModalDialog.SetParametersAsync(ParameterView.FromDictionary(new Dictionary<string, object>()
-                    {
-                        [nameof(ModalDialogBase.BodyContext)] = null!,
-                        [nameof(ModalDialogBase.BodyTemplate)] = null!
-                    }));
-                }
+                // 回调 OnClose 方法
+                if (option.OnCloseAsync != null) await option.OnCloseAsync();
             })));
 
             await ModalDialog.SetParametersAsync(ParameterView.FromDictionary(parameters.ToDictionary(key => key.Key, value => value.Value)));
             IsShowDialog = true;
             StateHasChanged();
+        }
+
+        private class Empty : ComponentBase
+        {
+            protected override void BuildRenderTree(RenderTreeBuilder builder) => builder.AddContent(0, string.Empty);
         }
 
         /// <summary>

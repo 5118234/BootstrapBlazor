@@ -1,89 +1,134 @@
 ﻿@namespace BootstrapBlazor.Components
-@inherits UploadBase
+@inherits IdComponentBase
 
-<div @attributes="@AdditionalAttributes" class="@ClassString" @ref="UploaderElement" data-url="@UploadUrl">
-    @if (IsStack)
+<div @attributes="@AdditionalAttributes" class="@ClassString" @ref="UploaderElement">
+    @if (Style == UploadStyle.Normal)
     {
-        <div tabindex="0" class="upload-button">
-            <button type="button" class="btn btn-primary btn-upload" disabled="@DisabledString">
-                <i class="@Icon"></i>
-                <span>@Text</span>
-            </button>
-            @if (ShowReset)
+        <div class="input-group">
+            <input type="text" class="form-control" id="@Id" readonly placeholder="@PlaceHolder" value="@GetFileName()" />
+            <div class="input-group-append">
+                @if (ShowDeleteButton)
+                {
+                    <Button class="@RemoveButtonClassString" IsDisabled="@IsDeleteButtonDisabled" Icon="@DeleteButtonIcon" Text="@DeleteButtonText" OnClick="@(e => OnFileDelete(UploadFiles.FirstOrDefault()))" />
+                }
+                <Button class="@BrowserButtonClassString" IsDisabled="@IsDisabled" Icon="@BrowserButtonIcon" Text="@BrowserButtonText" OnClick="@OnFileBrowser" />
+            </div>
+        </div>
+    }
+    else if (Style == UploadStyle.ClickToUpload)
+    {
+        <Button class="@BrowserButtonClassString" IsDisabled="@IsUploadButtonDisabled" Icon="@BrowserButtonIcon" Text="@BrowserButtonText" />
+        <div class="upload-body is-list">
+            @foreach (var item in UploadFiles)
             {
-                @RenderResetButton
+                <div @key="item" class="@GetUploadItemClassString(item)">
+                    <i class="@GetFileFormatClassString(item)"></i>
+                    <div class="fn">
+                        <span>@GetFileName(item)</span>
+                        <span>(@GetFileSize(item.Size))</span>
+                    </div>
+                    @if (item.Code == 0)
+                    {
+                        <i class="fa fa-check-circle-o text-success"></i>
+                        <i class="fa fa-trash-o text-danger" @onclick:stopPropagation @onclick="@(e => OnFileDelete(item))"></i>
+                    }
+                    else
+                    {
+                        <i class="fa fa-times-circle-o"></i>
+                    }
+                    @if (ShowProgress)
+                    {
+                        <Progress Color="Color.Success" Height="2" Value="@item.ProgressPercent" />
+                    }
+                </div>
             }
         </div>
     }
-    <div class="upload-body">
-        <div class="@PreviewClassString" data-file="@ImageUrl" style="@PrevStyleString">
-            <i class="fa fa-plus"></i>
-            <i class="fa fa-spinner fa-spin fa-2x"></i>
-            <img src="@ImageUrl" />
-            <span class="upload-file-icon">
-            </span>
-            <span class="upload-item-label bg-success">
-                <i class="fa fa-check"></i>
-            </span>
-            @if (IsCircle)
-            {
-                <svg class="upload-item-circle d-none" style="@PrevStyleString">
-                    <circle r="@CircleR" cy="@CircleDiameter" cx="@CircleDiameter" stroke-width="2" stroke="#EAEFF4" stroke-linejoin="round" stroke-linecap="round" fill="none" />
-                    <circle class="upload-item-circle-progress" r="@CircleR" cy="@CircleDiameter" cx="@CircleDiameter" stroke-dashoffset="@CircleLength" stroke-dasharray="@CircleLength"
-                            stroke-width="2" stroke="#1593FF" stroke-linejoin="round" stroke-linecap="round" fill="none" />
-                </svg>
-            }
-            <span class="upload-item-actions">
-                <span class="upload-item-delete">
-                    <i class="fa fa-trash-o"></i>
-                </span>
-            </span>
-            <div class="upload-prev-info">
-                <div class="upload-list-item-size"></div>
-                <div class="upload-footer-toolbar">
-                    <div class="upload-footer-actions">
-                        <button class="btn btn-sm btn-outline-secondary"><i class="fa fa-search-plus"></i></button>
-                    </div>
-                    <div class="upload-footer-buttons">
-                        <button class="btn btn-sm btn-outline-danger btn-delete"><i class="fa fa-trash-o"></i></button>
-                    </div>
-                </div>
-            </div>
-            <div class="upload-prev-progress">
-                <div class="upload-prev-progress-info">
-                    <div class="upload-list-item-text flex-fill d-none d-sm-block"></div>
-                    <div class="upload-list-item-rate ml-sm-2 mr-sm-2 d-none d-sm-block"></div>
-                    <div class="upload-list-item-size"></div>
-                </div>
-                <span class="upload-prev-progress-text">0 %</span>
-                <div class="upload-prev-progress-cur bg-success"></div>
-            </div>
-            <div class="upload-prev-invalid-file">
-                <div class="file-name d-none d-sm-block"></div>
-                <div class="file-error flex-fill text-right"></div>
-            </div>
-        </div>
-    </div>
-    @if (ShowPreview && !IsStack)
+    else if (Style == UploadStyle.Avatar)
     {
-        <div tabindex="0" class="upload-button">
-            <button type="button" class="btn btn-primary btn-upload" disabled="@DisabledString">
-                <i class="@Icon"></i>
-                <span>@Text</span>
-            </button>
-            @if (ShowReset)
+        <div class="upload-body is-avatar">
+            @foreach (var item in UploadFiles)
             {
-                @RenderResetButton
+                <div @key="item" class="@GetUploadItemClassString(item)" style="@PrevStyleString">
+                    <Avatar Url="@item.PrevUrl" />
+                    <div class="upload-item-actions">
+                        <span class="upload-item-delete p-3" @onclick="@(e => OnFileDelete(item))">
+                            <i class="fa fa-trash-o"></i>
+                        </span>
+                        @if (ShowProgress)
+                        {
+                            <span class="upload-item-spin">
+                                <i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>
+                            </span>
+                        }
+                    </div>
+                    @if (!IsCircle)
+                    {
+                        <span class="upload-item-label">
+                            <i class="fa fa-check"></i>
+                            <i class="fa fa-times"></i>
+                        </span>
+                    }
+                </div>
+            }
+            @if (!IsSingle || (IsSingle && !UploadFiles.Any()))
+            {
+                <div class="@GetUploadItemClassString()" style="@PrevStyleString">
+                    <div class="upload-item-actions btn-browser">
+                        <span class="upload-item-plus">
+                            <i class="fa fa-plus"></i>
+                        </span>
+                    </div>
+                </div>
             }
         </div>
     }
-    <input type="file" hidden multiple="@MultipleString" class="upload-input" accept="@AllowFileType">
+    else if (Style == UploadStyle.Card)
+    {
+        <div class="upload-body is-card">
+            @foreach (var item in UploadFiles)
+            {
+                <div @key="@item" class="@GetUploadItemClassString(item)">
+                    <div class="upload-item-body">
+                        @if (IsImage(item))
+                        {
+                            <img src="@item.PrevUrl" />
+                        }
+                        else
+                        {
+                            <i class="@GetFileFormatClassString(item)"></i>
+                        }
+                    </div>
+                    <div class="upload-item-size"><span>@GetFileName(item)</span> (@GetFileSize(item.Size))</div>
+                    <div class="upload-item-actions">
+                        <button class="btn btn-sm btn-outline-secondary" disabled="@GetDiabledString(item)">
+                            <i class="fa fa-search-plus"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" disabled="@GetDeleteButtonDiabledString(item)" @onclick="@(e => OnFileDelete(item))">
+                            <i class="fa fa-trash-o"></i>
+                        </button>
+                    </div>
+                    @if (ShowProgress)
+                    {
+                        <Progress Color="Color.Success" Height="4" Value="@item.ProgressPercent" />
+                    }
+                    <span class="upload-item-label">
+                        <i class="fa fa-check"></i>
+                        <i class="fa fa-times"></i>
+                    </span>
+                </div>
+            }
+            @if (!IsSingle || (IsSingle && !UploadFiles.Any()))
+            {
+                <div class="@GetUploadItemClassString()">
+                    <div class="upload-item-actions btn-browser">
+                        <span class="upload-item-plus">
+                            <i class="fa fa-plus"></i>
+                        </span>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    <InputFile AdditionalAttributes="@GetUploadAdditionalAttributes()" OnChange="OnFileChange" />
 </div>
-
-@code {
-    RenderFragment RenderResetButton =>
-    @<button type="button" class="btn btn-primary btn-reset" @onclick="@Reset()" disabled="@DisabledString">
-        <i class="fa fa-repeat"></i>
-        <span>@ResetText</span>
-    </button>;
-}

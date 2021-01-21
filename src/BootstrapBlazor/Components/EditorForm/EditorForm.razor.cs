@@ -1,11 +1,6 @@
-﻿// **********************************
-// 框架名称：BootstrapBlazor 
-// 框架作者：Argo Zhang
-// 开源地址：
-// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
-// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
-// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
-// **********************************
+﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Website: https://www.blazor.zone or https://argozhang.github.io/
 
 using BootstrapBlazor.Components.EditorForm;
 using Microsoft.AspNetCore.Components;
@@ -39,13 +34,12 @@ namespace BootstrapBlazor.Components
         [Parameter]
         public RenderFragment? Buttons { get; set; }
 
-#nullable disable
         /// <summary>
         /// 获得/设置 绑定模型
         /// </summary>
         [Parameter]
-        public TModel Model { get; set; }
-#nullable restore
+        [NotNull]
+        public TModel? Model { get; set; }
 
         /// <summary>
         /// 获得/设置 是否显示前置标签 默认为 true 显示标签
@@ -69,7 +63,7 @@ namespace BootstrapBlazor.Components
         /// 获得/设置 级联上下文绑定字段信息集合
         /// </summary>
         [CascadingParameter]
-        private IEnumerable<IEditorItem> CascadeEditorItems { get; set; } = Enumerable.Empty<IEditorItem>();
+        private IEnumerable<IEditorItem>? CascadeEditorItems { get; set; }
 
         [Inject]
         [NotNull]
@@ -126,7 +120,7 @@ namespace BootstrapBlazor.Components
             {
                 FirstRender = false;
 
-                if (CascadeEditorItems.Any())
+                if (CascadeEditorItems?.Any() ?? false)
                 {
                     // 通过级联参数渲染组件
                     FormItems.AddRange(CascadeEditorItems);
@@ -200,19 +194,19 @@ namespace BootstrapBlazor.Components
                 var valueExpression = Expression.Lambda(tDelegate, body);
 
                 var index = 0;
-                var componentType = GenerateComponent(fieldType);
+                var componentType = EditorForm<TModel>.GenerateComponent(fieldType);
                 builder.OpenComponent(index++, componentType);
                 builder.AddAttribute(index++, "DisplayText", displayName);
                 builder.AddAttribute(index++, "Value", fieldValue);
                 builder.AddAttribute(index++, "ValueChanged", fieldValueChanged);
                 builder.AddAttribute(index++, "ValueExpression", valueExpression);
                 builder.AddAttribute(index++, "IsDisabled", col.Readonly);
-                builder.AddMultipleAttributes(index++, CreateMultipleAttributes(fieldType));
+                builder.AddMultipleAttributes(index++, CreateMultipleAttributes(fieldType, fieldName));
                 builder.CloseComponent();
             }
         };
 
-        private IEnumerable<KeyValuePair<string, object>> CreateMultipleAttributes(Type fieldType)
+        private IEnumerable<KeyValuePair<string, object>> CreateMultipleAttributes(Type fieldType, string fieldName)
         {
             var ret = new List<KeyValuePair<string, object>>();
             var type = Nullable.GetUnderlyingType(fieldType) ?? fieldType;
@@ -228,7 +222,8 @@ namespace BootstrapBlazor.Components
                 switch (type.Name)
                 {
                     case nameof(String):
-                        ret.Add(new KeyValuePair<string, object>("placeholder", PlaceHolderText));
+                        var placeHolder = Model.GetPlaceHolder(fieldName);
+                        ret.Add(new KeyValuePair<string, object>("placeholder", placeHolder ?? PlaceHolderText));
                         break;
                     default:
                         break;
@@ -242,7 +237,7 @@ namespace BootstrapBlazor.Components
             return ret;
         }
 
-        private Type GenerateComponent(Type fieldType)
+        private static Type GenerateComponent(Type fieldType)
         {
             Type? ret = null;
             var type = (Nullable.GetUnderlyingType(fieldType) ?? fieldType);

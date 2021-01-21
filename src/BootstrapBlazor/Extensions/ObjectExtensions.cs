@@ -1,15 +1,12 @@
-﻿// **********************************
-// 框架名称：BootstrapBlazor 
-// 框架作者：Argo Zhang
-// 开源地址：
-// Gitee : https://gitee.com/LongbowEnterprise/BootstrapBlazor
-// GitHub: https://github.com/ArgoZhang/BootstrapBlazor 
-// 开源协议：LGPL-3.0 (https://gitee.com/LongbowEnterprise/BootstrapBlazor/blob/dev/LICENSE)
-// **********************************
+﻿// Copyright (c) Argo Zhang (argo@163.com). All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Website: https://www.blazor.zone or https://argozhang.github.io/
 
+using BootstrapBlazor.Components.EditorForm;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace BootstrapBlazor.Components
 {
@@ -161,6 +158,20 @@ namespace BootstrapBlazor.Components
             where TKey : notnull
         {
             return source.ToDictionary(key => key.Key, val => val.Value);
+        }
+
+        /// <summary>
+        /// 通过指定 Model 获得 IEditorItem 集合方法
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="predicate"></param>
+        /// <returns></returns>
+        public static IEnumerable<IEditorItem> GenerateColumns<TModel>(this TModel source, Func<PropertyInfo, bool>? predicate = null)
+            where TModel : class
+        {
+            var ret = new List<IEditorItem>(20);
+            if (predicate == null) predicate = p => true;
+            return source.GetType().GetProperties().Where(predicate).Select(p => new InternalEditorItem<TModel>(source, p)).ToList();
         }
     }
 }
