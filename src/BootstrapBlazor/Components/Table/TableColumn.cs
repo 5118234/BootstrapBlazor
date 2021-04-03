@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
@@ -23,6 +24,12 @@ namespace BootstrapBlazor.Components
         /// 获得/设置 相关过滤器
         /// </summary>
         public IFilter? Filter { get; set; }
+
+        /// <summary>
+        /// 获得/设置 组件类型 默认为 null
+        /// </summary>
+        [Parameter]
+        public Type? ComponentType { get; set; }
 
         /// <summary>
         /// 获得/设置 绑定列类型
@@ -66,6 +73,18 @@ namespace BootstrapBlazor.Components
         /// </summary>
         [Parameter]
         public bool TextEllipsis { get; set; }
+
+        /// <summary>
+        /// 获得/设置 步长 默认为 null
+        /// </summary>
+        [Parameter]
+        public object? Step { get; set; }
+
+        /// <summary>
+        /// 获得/设置 Textarea 行数 默认为 0
+        /// </summary>
+        [Parameter]
+        public int Rows { get; set; }
 
         /// <summary>
         /// 获得/设置 是否为默认排序规则 默认为 SortOrder.Unset
@@ -158,6 +177,12 @@ namespace BootstrapBlazor.Components
         public RenderFragment<TableColumnContext<object, TType>>? Template { get; set; }
 
         /// <summary>
+        /// 获得/设置 额外数据源一般用于下拉框或者 CheckboxList 这种需要额外配置数据源组件使用
+        /// </summary>
+        [Parameter]
+        public IEnumerable<SelectedItem>? Data { get; set; }
+
+        /// <summary>
         /// 获得/设置 编辑模板
         /// </summary>
         [Parameter]
@@ -203,7 +228,7 @@ namespace BootstrapBlazor.Components
             {
                 // 此处 context 为行数据
                 // 将绑定字段值放入上下文中
-                var invoker = GetPropertyCache.GetOrAdd((context.GetType(), GetFieldName()), key => context.GetPropertyValueLambda<object, TType>(key.FieldName).Compile());
+                var invoker = GetPropertyCache.GetOrAdd((context.GetType(), GetFieldName()), key => LambdaExtensions.GetPropertyValueLambda<object, TType>(context, key.FieldName).Compile());
                 var value = invoker(context);
                 builder.AddContent(0, Template.Invoke(new TableColumnContext<object, TType>(context, value)));
             });
@@ -215,7 +240,10 @@ namespace BootstrapBlazor.Components
         protected override void OnInitialized()
         {
             Table?.Columns.Add(this);
-            if (FieldExpression != null) _fieldIdentifier = FieldIdentifier.Create(FieldExpression);
+            if (FieldExpression != null)
+            {
+                _fieldIdentifier = FieldIdentifier.Create(FieldExpression);
+            }
 
             // 获取模型属性定义类型
             PropertyType = typeof(TType);
@@ -232,6 +260,6 @@ namespace BootstrapBlazor.Components
         /// </summary>
         public string GetFieldName() => _fieldIdentifier?.FieldName ?? "";
 
-        private static readonly ConcurrentDictionary<(Type ModelType, string FieldName), Func<object, TType>> GetPropertyCache = new ConcurrentDictionary<(Type, string), Func<object, TType>>();
+        private static readonly ConcurrentDictionary<(Type ModelType, string FieldName), Func<object, TType>> GetPropertyCache = new();
     }
 }

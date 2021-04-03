@@ -4,7 +4,6 @@
 
 using Microsoft.AspNetCore.Components.Forms;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -12,18 +11,16 @@ using System.Linq;
 namespace BootstrapBlazor.Components
 {
     /// <summary>
-    /// EditContextDataAnotation 扩展操作类
+    /// BootstrapBlazorEditContextDataAnnotationsExtensions 扩展操作类
     /// </summary>
     internal static class BootstrapBlazorEditContextDataAnnotationsExtensions
     {
-        private static readonly ConcurrentDictionary<(Type ModelType, string FieldName), Func<object, object>> PropertyValueInvokerCache = new ConcurrentDictionary<(Type, string), Func<object, object>>();
-
         /// <summary>
         /// 添加数据合规检查
         /// </summary>
         /// <param name="editContext">The <see cref="EditContext"/>.</param>
         /// <param name="editForm"></param>
-        public static EditContext AddEditContextDataAnnotationsValidation(this EditContext editContext, ValidateFormBase editForm)
+        public static EditContext AddEditContextDataAnnotationsValidation(this EditContext editContext, ValidateForm editForm)
         {
             if (editContext == null)
             {
@@ -41,17 +38,15 @@ namespace BootstrapBlazor.Components
             return editContext;
         }
 
-        private static void ValidateModel(EditContext? editContext, ValidationMessageStore messages, ValidateFormBase editForm)
+        private static void ValidateModel(EditContext? editContext, ValidationMessageStore messages, ValidateForm editForm)
         {
             if (editContext != null)
             {
                 var validationContext = new ValidationContext(editContext.Model);
                 var validationResults = new List<ValidationResult>();
-                Validator.TryValidateObject(editContext.Model, validationContext, validationResults, true);
-                editForm.ValidateObject(editContext.Model, validationContext, validationResults);
+                editForm.ValidateObject(validationContext, validationResults);
 
                 messages.Clear();
-
                 foreach (var validationResult in validationResults.Where(v => !string.IsNullOrEmpty(v.ErrorMessage)))
                 {
                     if (!validationResult.MemberNames.Any())
@@ -69,7 +64,7 @@ namespace BootstrapBlazor.Components
             }
         }
 
-        private static void ValidateField(EditContext editContext, ValidationMessageStore messages, in FieldIdentifier fieldIdentifier, ValidateFormBase editForm)
+        private static void ValidateField(EditContext editContext, ValidationMessageStore messages, in FieldIdentifier fieldIdentifier, ValidateForm editForm)
         {
             // 获取验证消息
             var results = new List<ValidationResult>();
@@ -79,28 +74,12 @@ namespace BootstrapBlazor.Components
                 DisplayName = fieldIdentifier.GetDisplayName()
             };
 
-            var propertyValue = fieldIdentifier.GetPropertyValue();
-            Validator.TryValidateProperty(propertyValue, validationContext, results);
-            editForm.ValidateProperty(propertyValue, validationContext, results);
+            editForm.ValidateField(validationContext, results, fieldIdentifier);
 
             messages.Clear(fieldIdentifier);
             messages.Add(fieldIdentifier, results.Where(v => !string.IsNullOrEmpty(v.ErrorMessage)).Select(result => result.ErrorMessage!));
 
             editContext.NotifyValidationStateChanged();
-        }
-
-        /// <summary>
-        /// 获取 FieldIdentifier 属性值
-        /// </summary>
-        /// <param name="fieldIdentifier"></param>
-        /// <returns></returns>
-        internal static object GetPropertyValue(this in FieldIdentifier fieldIdentifier)
-        {
-            var cacheKey = (fieldIdentifier.Model.GetType(), fieldIdentifier.FieldName);
-            var model = fieldIdentifier.Model;
-            var invoker = PropertyValueInvokerCache.GetOrAdd(cacheKey, key => model.GetPropertyValueLambda<object, object>(key.FieldName).Compile());
-
-            return invoker.Invoke(model);
         }
     }
 }

@@ -3,9 +3,7 @@ name: Deploy To Huawei VM
 on:
   push:
     branches:
-      - master
-      - dev
-      - hot-fix
+      - master-off
 
 jobs:
   deploy:
@@ -25,4 +23,3 @@ jobs:
             cd ~/BootstrapBlazor
             git checkout dev
             sh ~/deploy-blazor.sh
-            sh ~/deploy-wasm.sh

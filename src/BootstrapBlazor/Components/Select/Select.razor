@@ -4,9 +4,9 @@
 
 @if (IsShowLabel)
 {
-    <label class="control-label" for="@InputId">@DisplayText</label>
+    <label class="control-label" required="@Required" for="@InputId">@DisplayText</label>
 }
-<div @attributes="AdditionalAttributes" id="@Id" data-toggle="lgbSelect" class="@ClassName">
+<div @attributes="AdditionalAttributes" id="@Id" data-toggle="lgbSelect" class="@ClassName" @ref="SelectElement">
     <CascadingValue Value="this" IsFixed="true">
         @Options
     </CascadingValue>
@@ -29,7 +29,7 @@
             {
                 foreach (var item in items)
                 {
-                    <div class="@ActiveItem(item)" data-val="@item.Value" @onclick="@(e => OnItemClick(item))">
+                    <div class="@ActiveItem(item)" @onclick="@(e => OnItemClick(item))">
                         @ItemTemplate.Invoke(item)
                     </div>
                 }
@@ -49,11 +49,6 @@
                 }
             }
         </div>
-        @if (!Initialized && SelectedItem != null && OnSelectedItemChanged != null)
-        {
-            Initialized = true;
-            OnSelectedItemChanged.Invoke(SelectedItem);
-        }
     </RenderTemplate>
 </div>
 <CascadingValue Value="this" IsFixed="true">

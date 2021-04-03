@@ -46,7 +46,7 @@ namespace BootstrapBlazor.Components
 
         private CancellationTokenSource? CancelTokenSource { get; set; }
 
-        private ManualResetEventSlim? ResetEvent { get; set; } = new ManualResetEventSlim(true);
+        private ManualResetEvent ResetEvent { get; set; } = new(true);
 
         private bool Vibrate { get; set; }
 
@@ -153,39 +153,48 @@ namespace BootstrapBlazor.Components
             CurrentTimespan = Value;
             AlertTime = DateTime.Now.Add(CurrentTimespan).ToString("HH:mm");
 
-            if (CancelTokenSource != null)
-            {
-                CancelTokenSource.Dispose();
-            }
-
-            CancelTokenSource = new CancellationTokenSource();
-
             StateHasChanged();
 
             Task.Run(async () =>
             {
-                do
+                if (CancelTokenSource != null)
                 {
-                    await Task.Delay(1000, CancelTokenSource.Token);
-
-                    ResetEvent?.Wait();
-
-                    CurrentTimespan = CurrentTimespan.Subtract(TimeSpan.FromSeconds(1));
-                    await InvokeAsync(StateHasChanged);
+                    CancelTokenSource.Dispose();
                 }
-                while (!CancelTokenSource.IsCancellationRequested && CurrentTimespan > TimeSpan.Zero);
 
-                if (CurrentTimespan == TimeSpan.Zero)
+                CancelTokenSource = new CancellationTokenSource();
+
+                try
                 {
-                    await Task.Delay(1000);
-                    Value = TimeSpan.Zero;
-                    await InvokeAsync(() =>
+                    do
                     {
-                        Vibrate = IsVibrate;
-                        StateHasChanged();
-                        OnTimeout?.Invoke();
-                    });
+                        await Task.Delay(1000, CancelTokenSource?.Token ?? new CancellationToken(true));
+
+                        if (!(CancelTokenSource?.IsCancellationRequested ?? true))
+                        {
+                            ResetEvent.WaitOne();
+                            CurrentTimespan = CurrentTimespan.Subtract(TimeSpan.FromSeconds(1));
+                            await InvokeAsync(StateHasChanged);
+                        }
+                    }
+                    while (!(CancelTokenSource?.IsCancellationRequested ?? true) && CurrentTimespan > TimeSpan.Zero);
+
+                    if (CurrentTimespan == TimeSpan.Zero)
+                    {
+                        await Task.Delay(500, CancelTokenSource?.Token ?? new CancellationToken(true));
+                        if (!(CancelTokenSource?.IsCancellationRequested ?? true))
+                        {
+                            Value = TimeSpan.Zero;
+                            await InvokeAsync(() =>
+                            {
+                                Vibrate = IsVibrate;
+                                StateHasChanged();
+                                OnTimeout?.Invoke();
+                            });
+                        }
+                    }
                 }
+                catch (TaskCanceledException) { }
             });
         }
 
@@ -194,12 +203,12 @@ namespace BootstrapBlazor.Components
             IsPause = !IsPause;
             if (IsPause)
             {
-                ResetEvent?.Reset();
+                ResetEvent.Reset();
             }
             else
             {
                 AlertTime = DateTime.Now.Add(CurrentTimespan).ToString("HH:mm");
-                if (!ResetEvent?.IsSet ?? false) ResetEvent?.Set();
+                ResetEvent.Set();
             }
             return Task.CompletedTask;
         }
@@ -222,8 +231,9 @@ namespace BootstrapBlazor.Components
             if (disposing)
             {
                 CancelTokenSource?.Dispose();
-                ResetEvent?.Dispose();
-                ResetEvent = null;
+                CancelTokenSource = null;
+
+                ResetEvent.Dispose();
             }
 
             base.Dispose(disposing);

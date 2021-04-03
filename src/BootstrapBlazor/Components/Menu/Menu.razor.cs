@@ -3,7 +3,6 @@
 // Website: https://www.blazor.zone or https://argozhang.github.io/
 
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -72,7 +71,7 @@ namespace BootstrapBlazor.Components
 
         [Inject]
         [NotNull]
-        private MenuTabBoundleOptions? Options { get; set; }
+        private TabItemTextOptions? Options { get; set; }
 
         /// <summary>
         /// OnInitialized 方法
@@ -86,7 +85,9 @@ namespace BootstrapBlazor.Components
 
             if (!DisableNavigation)
             {
-                Options.TabItemText = item?.Text;
+                Options.Text = item?.Text;
+                Options.Icon = item?.Icon;
+                Options.IsActive = true;
             }
         }
 
@@ -127,14 +128,18 @@ namespace BootstrapBlazor.Components
         {
             if (!item.IsDisabled)
             {
-                Options.TabItemText = item.Text;
-
                 // 回调委托
                 if (OnClick != null) await OnClick(item);
                 if (DisableNavigation)
                 {
                     CascadingSetActive(item);
                     StateHasChanged();
+                }
+                else
+                {
+                    Options.Text = item.Text;
+                    Options.Icon = item.Icon;
+                    Options.IsActive = true;
                 }
             }
         }

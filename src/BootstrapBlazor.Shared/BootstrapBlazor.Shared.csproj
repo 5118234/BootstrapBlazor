@@ -1,7 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
     <IsPackable>true</IsPackable>
     <Version>5.0.0</Version>
   </PropertyGroup>
@@ -13,17 +12,18 @@
   <ItemGroup>
     <Content Remove="Locales\*.json" />
     <EmbeddedResource Include="Locales\*.json" />
+    <Content Remove="docs.json" />
+    <EmbeddedResource Include="docs.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BootstrapBlazor.Chart" Version="5.0.3" />
-    <PackageReference Include="BootstrapBlazor.Markdown" Version="5.0.3" />
-    <PackageReference Include="BootstrapBlazor.TableExport" Version="5.0.3" />
+    <PackageReference Include="BootstrapBlazor.Chart" Version="5.0.13" />
+    <PackageReference Include="BootstrapBlazor.Markdown" Version="5.0.13" />
+    <PackageReference Include="BootstrapBlazor.TableExport" Version="5.0.13" />
     <PackageReference Include="System.Net.Http.Json" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BootstrapBlazor.Docs\BootstrapBlazor.Docs.csproj" />
     <ProjectReference Include="..\BootstrapBlazor\BootstrapBlazor.csproj" />
   </ItemGroup>
 

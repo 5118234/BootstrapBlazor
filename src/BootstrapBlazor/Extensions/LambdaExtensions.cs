@@ -77,8 +77,9 @@ namespace System.Linq
         /// </summary>
         /// <typeparam name="TItem"></typeparam>
         /// <param name="expressions"></param>
+        /// <param name="logic"></param>
         /// <returns></returns>
-        private static Expression<Func<TItem, bool>> ExpressionAndLambda<TItem>(this IEnumerable<Expression<Func<TItem, bool>>> expressions)
+        private static Expression<Func<TItem, bool>> ExpressionAndLambda<TItem>(this IEnumerable<Expression<Func<TItem, bool>>> expressions, FilterLogic logic = FilterLogic.And)
         {
             Expression<Func<TItem, bool>>? ret = null;
             var exp_p = Expression.Parameter(typeof(TItem));
@@ -94,7 +95,9 @@ namespace System.Linq
 
                 var left = visitor.Visit(ret.Body);
                 var right = visitor.Visit(exp.Body);
-                ret = Expression.Lambda<Func<TItem, bool>>(Expression.AndAlso(left, right), exp_p);
+                ret = logic == FilterLogic.And
+                    ? Expression.Lambda<Func<TItem, bool>>(Expression.AndAlso(left, right), exp_p)
+                    : Expression.Lambda<Func<TItem, bool>>(Expression.OrElse(left, right), exp_p);
             }
             return ret ?? (r => true);
         }
@@ -104,10 +107,11 @@ namespace System.Linq
         /// </summary>
         /// <typeparam name="TItem"></typeparam>
         /// <param name="filters"></param>
+        /// <param name="logic"></param>
         /// <returns></returns>
-        public static Func<TItem, bool> GetFilterFunc<TItem>(this IEnumerable<IFilterAction> filters)
+        public static Func<TItem, bool> GetFilterFunc<TItem>(this IEnumerable<IFilterAction> filters, FilterLogic logic = FilterLogic.And)
         {
-            return filters.GetFilterLambda<TItem>().Compile();
+            return filters.GetFilterLambda<TItem>(logic).Compile();
         }
 
         /// <summary>
@@ -115,11 +119,12 @@ namespace System.Linq
         /// </summary>
         /// <typeparam name="TItem"></typeparam>
         /// <param name="filters"></param>
+        /// <param name="logic"></param>
         /// <returns></returns>
-        public static Expression<Func<TItem, bool>> GetFilterLambda<TItem>(this IEnumerable<IFilterAction> filters)
+        public static Expression<Func<TItem, bool>> GetFilterLambda<TItem>(this IEnumerable<IFilterAction> filters, FilterLogic logic = FilterLogic.And)
         {
             var exps = filters.Select(f => f.GetFilterConditions().GetFilterLambda<TItem>());
-            return exps.ExpressionAndLambda();
+            return exps.ExpressionAndLambda(logic);
         }
 
         /// <summary>
@@ -187,34 +192,25 @@ namespace System.Linq
 
         private static Expression Contains(this Expression left, Expression right)
         {
-            Expression<Func<string, string, bool>> expression = (l, r) => l != null && r != null && l.Contains(r);
-            return Expression.Invoke(expression, left, right);
-        }
-
-        private static bool NullableContains(string left, string right)
-        {
-            var ret = false;
-            if (left != null && right != null)
-            {
-                ret = left.Contains(right);
-            }
-            return ret;
+            // https://gitee.com/LongbowEnterprise/BootstrapBlazor/issues/I2DIR4
+            // 兼容 EFCore 与普通逻辑 EFCore 内自动处理空问题
+            var method = typeof(string).GetMethod("Contains", new Type[1] { typeof(string) })!;
+            return Expression.AndAlso(Expression.NotEqual(left, Expression.Constant(null)), Expression.Call(left, method, right));
         }
 
         #region Sort
         /// <summary>
-        /// 
+        /// 获得排序 Expression 表达式
         /// </summary>
         /// <typeparam name="TItem"></typeparam>
-        /// <param name="items"></param>
         /// <returns></returns>
-        public static Expression<Func<IEnumerable<TItem>, string, SortOrder, IEnumerable<TItem>>> GetSortLambda<TItem>(this IEnumerable<TItem> items)
+        public static Expression<Func<IEnumerable<TItem>, string, SortOrder, IEnumerable<TItem>>> GetSortLambda<TItem>()
         {
             var exp_p1 = Expression.Parameter(typeof(IEnumerable<TItem>));
             var exp_p2 = Expression.Parameter(typeof(string));
             var exp_p3 = Expression.Parameter(typeof(SortOrder));
 
-            var mi = typeof(LambdaExtensions).GetMethod("Sort")!.MakeGenericMethod(typeof(TItem));
+            var mi = typeof(LambdaExtensions).GetMethods().Where(m => m.Name == "Sort" && m.ReturnType.Name == typeof(IEnumerable<>).Name).First().MakeGenericMethod(typeof(TItem));
             var body = Expression.Call(mi, exp_p1, exp_p2, exp_p3);
             return Expression.Lambda<Func<IEnumerable<TItem>, string, SortOrder, IEnumerable<TItem>>>(body, exp_p1, exp_p2, exp_p3);
         }
@@ -229,10 +225,23 @@ namespace System.Linq
         /// <returns></returns>
         public static IEnumerable<TItem> Sort<TItem>(this IEnumerable<TItem> items, string sortName, SortOrder sortOrder)
         {
-            return sortOrder == SortOrder.Unset ? items : _OrderBy(items, sortName, sortOrder);
+            return sortOrder == SortOrder.Unset ? items : EnumerableOrderBy(items, sortName, sortOrder);
         }
 
-        private static IEnumerable<TItem> _OrderBy<TItem>(IEnumerable<TItem> query, string propertyName, SortOrder sortOrder)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TItem"></typeparam>
+        /// <param name="items"></param>
+        /// <param name="sortName"></param>
+        /// <param name="sortOrder"></param>
+        /// <returns></returns>
+        public static IQueryable<TItem> Sort<TItem>(this IQueryable<TItem> items, string sortName, SortOrder sortOrder)
+        {
+            return sortOrder == SortOrder.Unset ? items : QueryableOrderBy(items, sortName, sortOrder);
+        }
+
+        private static IEnumerable<TItem> EnumerableOrderBy<TItem>(IEnumerable<TItem> query, string propertyName, SortOrder sortOrder)
         {
             var methodName = sortOrder == SortOrder.Desc ? "OrderByDescendingInternal" : "OrderByInternal";
 
@@ -243,101 +252,30 @@ namespace System.Linq
             return mi?.Invoke(null, new object[] { query.AsQueryable(), pi }) as IOrderedQueryable<TItem> ?? query;
         }
 
+        private static IQueryable<TItem> QueryableOrderBy<TItem>(IQueryable<TItem> query, string propertyName, SortOrder sortOrder)
+        {
+            var methodName = sortOrder == SortOrder.Desc ? "OrderByDescendingInternal" : "OrderByInternal";
+
+            var pi = typeof(TItem).GetProperty(propertyName);
+            var mi = typeof(LambdaExtensions).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Static)!
+                                       .MakeGenericMethod(typeof(TItem), pi!.PropertyType);
+
+            return mi?.Invoke(null, new object[] { query, pi }) as IOrderedQueryable<TItem> ?? query;
+        }
+
         private static IOrderedQueryable<TItem> OrderByInternal<TItem, TKey>(IQueryable<TItem> query, System.Reflection.PropertyInfo memberProperty) => query.OrderBy(GetPropertyLambda<TItem, TKey>(memberProperty));
 
         private static IOrderedQueryable<TItem> OrderByDescendingInternal<TItem, TKey>(IQueryable<TItem> query, System.Reflection.PropertyInfo memberProperty) => query.OrderByDescending(GetPropertyLambda<TItem, TKey>(memberProperty));
 
         private static Expression<Func<TItem, TKey>> GetPropertyLambda<TItem, TKey>(PropertyInfo pi)
         {
-            if (pi.PropertyType != typeof(TKey)) throw new InvalidOperationException();
+            if (pi.PropertyType != typeof(TKey))
+            {
+                throw new InvalidOperationException();
+            }
 
             var exp_p1 = Expression.Parameter(typeof(TItem));
             return Expression.Lambda<Func<TItem, TKey>>(Expression.Property(exp_p1, pi), exp_p1);
-        }
-        #endregion
-
-        #region ToString
-        private static readonly ConcurrentDictionary<Type, Func<object, string, IFormatProvider?, string>> FormatLambdaCache = new ConcurrentDictionary<Type, Func<object, string, IFormatProvider?, string>>();
-
-        /// <summary>
-        /// 任意类型格式化方法
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="format"></param>
-        /// <param name="provider"></param>
-        /// <returns></returns>
-        public static string Format(this object source, string format, IFormatProvider? provider = null)
-        {
-            var invoker = FormatLambdaCache.GetOrAdd(source.GetType(), key => source.GetFormatLambda().Compile());
-            return invoker(source, format, provider);
-        }
-
-        /// <summary>
-        /// 获取 Format 方法的 Lambda 表达式
-        /// </summary>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        public static Expression<Func<object, string, IFormatProvider?, string>> GetFormatLambda(this object source)
-        {
-            var type = source.GetType();
-            var exp_p1 = Expression.Parameter(typeof(object));
-            var exp_p2 = Expression.Parameter(typeof(string));
-            var exp_p3 = Expression.Parameter(typeof(IFormatProvider));
-            Expression? body;
-            if (type.IsSubclassOf(typeof(IFormattable)))
-            {
-                // 通过 IFormattable 接口格式化
-                var mi = type.GetMethod("ToString", new Type[] { typeof(string), typeof(IFormatProvider) });
-                body = Expression.Call(Expression.Convert(exp_p1, type), mi!, exp_p2, exp_p3);
-            }
-            else
-            {
-                // 通过 ToString(string format) 方法格式化
-                var mi = type.GetMethod("ToString", new Type[] { typeof(string) });
-                body = Expression.Call(Expression.Convert(exp_p1, type), mi!, exp_p2);
-            }
-            return Expression.Lambda<Func<object, string, IFormatProvider?, string>>(body, exp_p1, exp_p2, exp_p3);
-        }
-
-        private static readonly ConcurrentDictionary<Type, Func<object, IFormatProvider?, string>> FormatProviderLambdaCache = new ConcurrentDictionary<Type, Func<object, IFormatProvider?, string>>();
-
-        /// <summary>
-        /// 任意类型格式化方法
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="provider"></param>
-        /// <returns></returns>
-        public static string Format(this object source, IFormatProvider provider)
-        {
-            var invoker = FormatProviderLambdaCache.GetOrAdd(source.GetType(), key => source.GetFormatProviderLambda().Compile());
-            return invoker(source, provider);
-        }
-
-        /// <summary>
-        /// 获取 Format 方法的 Lambda 表达式
-        /// </summary>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        public static Expression<Func<object, IFormatProvider?, string>> GetFormatProviderLambda(this object source)
-        {
-            var type = source.GetType();
-            var exp_p1 = Expression.Parameter(typeof(object));
-            var exp_p2 = Expression.Parameter(typeof(IFormatProvider));
-            Expression? body;
-
-            var mi = type.GetMethod("ToString", new Type[] { typeof(IFormatProvider) });
-            if (mi != null)
-            {
-                // 通过 ToString(IFormatProvider? provider) 接口格式化
-                body = Expression.Call(Expression.Convert(exp_p1, type), mi, exp_p2);
-            }
-            else
-            {
-                // 通过 ToString() 方法格式化
-                mi = type.GetMethod("ToString", new Type[] { typeof(string) });
-                body = Expression.Call(Expression.Convert(exp_p1, type), mi!);
-            }
-            return Expression.Lambda<Func<object, IFormatProvider?, string>>(body, exp_p1, exp_p2);
         }
         #endregion
 
@@ -347,9 +285,12 @@ namespace System.Linq
         /// <typeparam name="TValue"></typeparam>
         /// <param name="v"></param>
         /// <returns></returns>
-        public static Expression<Func<TValue, object, bool>> GetGreaterThanOrEqualLambda<TValue>(this TValue v)
+        private static Expression<Func<TValue, object, bool>> GetGreaterThanOrEqualLambda<TValue>(TValue v)
         {
-            if (v == null) throw new ArgumentNullException(nameof(v));
+            if (v == null)
+            {
+                throw new ArgumentNullException(nameof(v));
+            }
 
             var left = Expression.Parameter(v.GetType());
             var right = Expression.Parameter(typeof(object));
@@ -363,24 +304,10 @@ namespace System.Linq
         /// <param name="v1"></param>
         /// <param name="v2"></param>
         /// <returns></returns>
-        public static bool GreaterThanOrEqual<TValue>(this TValue v1, object v2)
+        public static bool GreaterThanOrEqual<TValue>(TValue v1, object v2)
         {
-            var invoker = v1.GetGreaterThanOrEqualLambda().Compile();
+            var invoker = GetGreaterThanOrEqualLambda(v1).Compile();
             return invoker(v1, v2);
-        }
-
-        /// <summary>
-        /// 通过属性名称获取其实例值
-        /// </summary>
-        /// <typeparam name="TModel"></typeparam>
-        /// <typeparam name="TResult"></typeparam>
-        /// <param name="t"></param>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public static TResult GetPropertyValue<TModel, TResult>(this TModel t, string name)
-        {
-            var invoker = t.GetPropertyValueLambda<TModel, TResult>(name).Compile();
-            return invoker(t);
         }
 
         /// <summary>
@@ -391,12 +318,18 @@ namespace System.Linq
         /// <param name="item"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        public static Expression<Func<TModel, TResult>> GetPropertyValueLambda<TModel, TResult>(this TModel item, string name)
+        public static Expression<Func<TModel, TResult>> GetPropertyValueLambda<TModel, TResult>(TModel item, string name)
         {
-            if (item == null) throw new ArgumentNullException(nameof(item));
+            if (item == null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
 
             var p = item.GetType().GetProperty(name);
-            if (p == null) throw new InvalidOperationException($"类型 {item.GetType().Name} 未找到 {name} 属性，无法获取其值");
+            if (p == null)
+            {
+                throw new InvalidOperationException($"类型 {item.GetType().Name} 未找到 {name} 属性，无法获取其值");
+            }
 
             var param_p1 = Expression.Parameter(typeof(TModel));
             var body = Expression.Property(Expression.Convert(param_p1, item.GetType()), p);
@@ -404,41 +337,48 @@ namespace System.Linq
         }
 
         /// <summary>
-        /// 根据属性名称设置属性的值
+        /// 给指定模型属性赋值 Lambda 表达式
         /// </summary>
-        /// <typeparam name="TItem">对象类型</typeparam>
+        /// <typeparam name="TModel"></typeparam>
         /// <typeparam name="TValue"></typeparam>
-        /// <param name="t">对象</param>
-        /// <param name="name">属性名</param>
-        /// <param name="value">属性的值</param>
-        public static void SetPropertyValue<TItem, TValue>(this TItem t, string name, TValue value)
-        {
-            var invoker = t.SetPropertyValueLambda<TItem, TValue>(name).Compile();
-            invoker(t, value);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="TItem"></typeparam>
-        /// <typeparam name="TValue"></typeparam>
-        /// <param name="t"></param>
+        /// <param name="model"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        public static Expression<Action<TItem, TValue>> SetPropertyValueLambda<TItem, TValue>(this TItem t, string name)
+        public static Expression<Action<TModel, TValue>> SetPropertyValueLambda<TModel, TValue>(TModel model, string name)
         {
-            if (t == null) throw new ArgumentNullException(nameof(t));
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model));
+            }
 
-            var p = t.GetType().GetProperty(name);
-            if (p == null) throw new InvalidOperationException($"类型 {typeof(TItem).Name} 未找到 {name} 属性，无法设置其值");
+            var p = model.GetType().GetProperty(name);
+            if (p == null)
+            {
+                throw new InvalidOperationException($"类型 {typeof(TModel).Name} 未找到 {name} 属性，无法设置其值");
+            }
 
-            var param_p1 = Expression.Parameter(typeof(TItem));
+            var param_p1 = Expression.Parameter(typeof(TModel));
             var param_p2 = Expression.Parameter(typeof(TValue));
 
             //获取设置属性的值的方法
             var mi = p.GetSetMethod(true);
-            var body = Expression.Call(Expression.Convert(param_p1, t.GetType()), mi!, Expression.Convert(param_p2, p.PropertyType));
-            return Expression.Lambda<Action<TItem, TValue>>(body, param_p1, param_p2);
+            var body = Expression.Call(Expression.Convert(param_p1, model.GetType()), mi!, Expression.Convert(param_p2, p.PropertyType));
+            return Expression.Lambda<Action<TModel, TValue>>(body, param_p1, param_p2);
+        }
+
+        private static readonly ConcurrentDictionary<(Type ModelType, string FieldName), Func<object, object>> PropertyValueInvokerCache = new();
+
+        /// <summary>
+        /// 获取 指定对象的属性值
+        /// </summary>
+        /// <param name="model"></param>
+        /// <param name="fieldName"></param>
+        /// <returns></returns>
+        public static object GetPropertyValue(object model, string fieldName)
+        {
+            var cacheKey = (model.GetType(), fieldName);
+            var invoker = PropertyValueInvokerCache.GetOrAdd(cacheKey, key => GetPropertyValueLambda<object, object>(model, key.FieldName).Compile());
+            return invoker.Invoke(model);
         }
 
         #region TryParse

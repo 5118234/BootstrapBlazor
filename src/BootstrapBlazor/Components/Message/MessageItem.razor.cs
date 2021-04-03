@@ -62,8 +62,13 @@ namespace BootstrapBlazor.Components
             if (firstRender && Message != null)
             {
                 _interop = new JSInterop<Message>(JSRuntime);
-                await _interop.Invoke(Message, MessageItemElement, "bb_message", nameof(Message.Clear));
+                await _interop.InvokeVoidAsync(Message, MessageItemElement, "bb_message", nameof(Message.Clear));
             }
+        }
+
+        private async Task OnClick()
+        {
+            if (OnDismiss != null) await OnDismiss();
         }
     }
 }

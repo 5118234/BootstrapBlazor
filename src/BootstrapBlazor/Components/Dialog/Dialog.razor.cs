@@ -3,7 +3,6 @@
 // Website: https://www.blazor.zone or https://argozhang.github.io/
 
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -24,10 +23,9 @@ namespace BootstrapBlazor.Components
         private Modal? ModalContainer { get; set; }
 
         /// <summary>
-        /// 获得/设置 弹出对话框实例
+        /// 获得/设置 弹出对话框实例集合
         /// </summary>
-        [NotNull]
-        private ModalDialog? ModalDialog { get; set; }
+        private List<List<KeyValuePair<string, object?>>> DialogParameters { get; set; } = new();
 
         /// <summary>
         /// DialogServices 服务实例
@@ -61,48 +59,61 @@ namespace BootstrapBlazor.Components
             if (ModalContainer != null && IsShowDialog)
             {
                 IsShowDialog = false;
-                await ModalContainer.Toggle();
+                await ModalContainer.Show();
             }
         }
 
-        private async Task Show(DialogOption option)
+        private Task Show(DialogOption option)
         {
             option.Dialog = ModalContainer;
             var parameters = option.ToAttributes().ToList();
 
-            if (option.BodyTemplate != null)
+            var content = option.BodyTemplate ?? option.Component?.Render();
+            if (content != null)
             {
-                parameters.Add(new KeyValuePair<string, object>(nameof(ModalDialogBase.BodyTemplate), option.BodyTemplate));
-            }
-            else if (option.Component != null)
-            {
-                parameters.Add(new KeyValuePair<string, object>(nameof(ModalDialogBase.BodyTemplate), option.Component.Render()));
-            }
-            else
-            {
-                parameters.Add(new KeyValuePair<string, object>(nameof(ModalDialogBase.BodyTemplate), DynamicComponent.CreateComponent<Empty>().Render()));
+                parameters.Add(new KeyValuePair<string, object?>(nameof(ModalDialog.BodyTemplate), content));
             }
 
             if (option.FooterTemplate != null)
             {
-                parameters.Add(new KeyValuePair<string, object>(nameof(ModalDialogBase.FooterTemplate), option.FooterTemplate));
+                parameters.Add(new KeyValuePair<string, object?>(nameof(ModalDialog.FooterTemplate), option.FooterTemplate));
             }
 
-            parameters.Add(new KeyValuePair<string, object>(nameof(ModalDialogBase.OnClose), new Func<Task>(async () =>
+            parameters.Add(new KeyValuePair<string, object?>(nameof(ModalDialog.OnClose), new Func<Task>(async () =>
             {
                 // 回调 OnClose 方法
-                if (option.OnCloseAsync != null) await option.OnCloseAsync();
+                // 移除当前对话框
+                if (option.OnCloseAsync != null)
+                {
+                    await option.OnCloseAsync();
+                }
+                DialogParameters.Remove(parameters);
+
+                // 支持多级弹窗
+                await ModalContainer.CloseOrPopDialog();
+                StateHasChanged();
             })));
 
-            await ModalDialog.SetParametersAsync(ParameterView.FromDictionary(parameters.ToDictionary(key => key.Key, value => value.Value)));
-            IsShowDialog = true;
+            DialogParameters.Add(parameters);
+            if (DialogParameters.Count == 1)
+            {
+                IsShowDialog = true;
+            }
             StateHasChanged();
+            return Task.CompletedTask;
         }
 
-        private class Empty : ComponentBase
+        private RenderFragment RenderDialog(IEnumerable<KeyValuePair<string, object?>> parameter) => builder =>
         {
-            protected override void BuildRenderTree(RenderTreeBuilder builder) => builder.AddContent(0, string.Empty);
-        }
+            builder.OpenComponent<ModalDialog>(0);
+            builder.AddMultipleAttributes(1, parameter);
+            builder.AddComponentReferenceCapture(2, dialog =>
+            {
+                var modal = (ModalDialog)dialog;
+                ModalContainer.ShowDialog(modal);
+            });
+            builder.CloseComponent();
+        };
 
         /// <summary>
         /// 

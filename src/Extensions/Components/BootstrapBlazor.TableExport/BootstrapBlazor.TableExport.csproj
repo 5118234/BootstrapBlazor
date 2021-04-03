@@ -1,21 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
-
-  <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-    <IsPackable>true</IsPackable>
-    <PackageIcon>logo.png</PackageIcon>
-    <Version>5.0.3</Version>
-    <PackageReleaseNotes>https://gitee.com/LongbowEnterprise/BootstrapBlazor/wikis</PackageReleaseNotes>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <SupportedPlatform Include="browser" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="BootstrapBlazor" Version="5.0.10" />
-    <PackageReference Include="EPPlus" Version="4.5.3.3" />
-  </ItemGroup>
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <ItemGroup>
     <Content Remove="bundleconfig.json" />
@@ -26,7 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="logo.png" Pack="true" PackagePath="" />
+    <PackageReference Include="EPPlus" Version="4.5.3.3" />
   </ItemGroup>
 
 </Project>

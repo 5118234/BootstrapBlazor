@@ -1,30 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
-
-  <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-    <IsPackable>true</IsPackable>
-    <PackageIcon>logo.png</PackageIcon>
-    <Version>5.0.3</Version>
-    <PackageReleaseNotes>https://gitee.com/LongbowEnterprise/BootstrapBlazor/wikis</PackageReleaseNotes>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <SupportedPlatform Include="browser" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="BootstrapBlazor" Version="5.0.10" />
-  </ItemGroup>
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <ItemGroup>
     <Content Remove="bundleconfig.json" />
-    <Content Remove="wwwroot\lib\editor.md\*.*" />
+    <Content Remove="wwwroot\lib\tui.editor\toastui-jquery-editor.js" />
+    <Content Remove="wwwroot\lib\tui.editor\zh-cn.js" />
     <None Include="bundleconfig.json" />
-    <None Include="wwwroot\lib\editor.md\*.*" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="logo.png" Pack="true" PackagePath="" />
+    <None Include="wwwroot\lib\tui.editor\toastui-jquery-editor.js" />
+    <None Include="wwwroot\lib\tui.editor\zh-cn.js" />
   </ItemGroup>
 
 </Project>

@@ -8,6 +8,7 @@ using Microsoft.JSInterop;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
@@ -29,20 +30,17 @@ namespace BootstrapBlazor.Components
 
         private string? ClassString => CssBuilder.Default("multi-select")
             .AddClass("show", IsShow)
+            .AddClass("disabled", IsDisabled)
             .Build();
 
-        private string? MenuClassString => CssBuilder.Default("multi-select-menu fade")
-            .AddClass("show", IsShow)
-            .Build();
-
-        private string? ToggleClassString => CssBuilder.Default("multi-select-toggle")
-            .AddClass("is-disabled", IsDisabled)
+        private string? ToggleClassString => CssBuilder.Default("dropdown-menu-toggle")
             .AddClass($"border-{Color.ToDescriptionString()}", Color != Color.None && !IsDisabled)
+            .AddClass("disabled", IsDisabled)
             .AddClass("selected", SelectedItems.Any())
             .AddClass(CssClass).AddClass(ValidCss)
             .Build();
 
-        private string? GetItemClassString(SelectedItem item) => CssBuilder.Default("multi-select-menu-item")
+        private string? GetItemClassString(SelectedItem item) => CssBuilder.Default("dropdown-item")
             .AddClass("active", GetCheckedState(item))
             .Build();
 
@@ -72,10 +70,22 @@ namespace BootstrapBlazor.Components
         public bool ShowCloseButton { get; set; } = true;
 
         /// <summary>
-        /// 获得/设置 是否显示全选功能按钮 默认为 false 不显示
+        /// 获得/设置 是否显示功能按钮 默认为 false 不显示
         /// </summary>
         [Parameter]
-        public bool ShowSelectAllButton { get; set; }
+        public bool ShowToolbar { get; set; }
+
+        /// <summary>
+        /// 获得/设置 是否显示默认功能按钮 默认为 true 显示
+        /// </summary>
+        [Parameter]
+        public bool ShowDefaultButtons { get; set; } = true;
+
+        /// <summary>
+        /// 获得/设置 扩展按钮模板
+        /// </summary>
+        [Parameter]
+        public RenderFragment? ButtonTemplate { get; set; }
 
         /// <summary>
         /// 获得/设置 按钮颜色
@@ -123,6 +133,32 @@ namespace BootstrapBlazor.Components
         [NotNull]
         public string? ClearText { get; set; }
 
+        /// <summary>
+        /// 获得/设置 选项最大数 默认为 0 不限制
+        /// </summary>
+        [Parameter]
+        public int Max { get; set; }
+
+        /// <summary>
+        /// 获得/设置 设置最大值时错误消息文字
+        /// </summary>
+        [Parameter]
+        [NotNull]
+        public string? MaxErrorMessage { get; set; }
+
+        /// <summary>
+        /// 获得/设置 选项最小数 默认为 0 不限制
+        /// </summary>
+        [Parameter]
+        public int Min { get; set; }
+
+        /// <summary>
+        /// 获得/设置 设置最小值时错误消息文字
+        /// </summary>
+        [Parameter]
+        [NotNull]
+        public string? MinErrorMessage { get; set; }
+
         [Inject]
         [NotNull]
         private IStringLocalizer<MultiSelect<TValue>>? Localizer { get; set; }
@@ -138,12 +174,38 @@ namespace BootstrapBlazor.Components
             SelectAllText ??= Localizer[nameof(SelectAllText)];
             ReverseSelectText ??= Localizer[nameof(ReverseSelectText)];
             ClearText ??= Localizer[nameof(ClearText)];
+            MinErrorMessage ??= Localizer[nameof(MinErrorMessage)];
+            MaxErrorMessage ??= Localizer[nameof(MaxErrorMessage)];
 
-            if (Items == null) Items = Enumerable.Empty<SelectedItem>();
+            if (Items == null)
+            {
+                Type? innerType = null;
+                if (typeof(IEnumerable).IsAssignableFrom(typeof(TValue)))
+                {
+                    innerType = typeof(TValue).GetGenericArguments()[0];
+                }
+                if (innerType != null && innerType.IsEnum)
+                {
+                    Items = innerType.ToSelectList();
+                }
+                else
+                {
+                    Items = Enumerable.Empty<SelectedItem>();
+                }
+            }
 
             if (OnSearchTextChanged == null)
             {
                 OnSearchTextChanged = text => Items.Where(i => i.Text.Contains(text, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (Min > 0)
+            {
+                Rules.Add(new MinValidator() { Value = Min, ErrorMessage = MinErrorMessage });
+            }
+            if (Max > 0)
+            {
+                Rules.Add(new MaxValidator() { Value = Max, ErrorMessage = MaxErrorMessage });
             }
         }
 
@@ -167,9 +229,9 @@ namespace BootstrapBlazor.Components
                     list = CurrentValueAsString.Split(',', StringSplitOptions.RemoveEmptyEntries);
                     _oldStringValue = CurrentValueAsString;
                 }
-                else if (typeValue.IsGenericType)
+                else if (typeValue.IsGenericType || typeValue.IsArray)
                 {
-                    var t = typeValue.GenericTypeArguments;
+                    var t = typeValue.IsGenericType ? typeValue.GenericTypeArguments[0] : typeValue.GetElementType()!;
                     var instance = Activator.CreateInstance(typeof(List<>).MakeGenericType(t))!;
                     var mi = instance.GetType().GetMethod("AddRange");
                     if (mi != null)
@@ -214,7 +276,7 @@ namespace BootstrapBlazor.Components
             if (firstRender)
             {
                 Interop = new JSInterop<MultiSelect<TValue>>(JSRuntime);
-                await Interop.Invoke(this, SelectElement, "bb_multi_select", nameof(Close));
+                await Interop.InvokeVoidAsync(this, SelectElement, "bb_multi_select", nameof(Close));
             }
         }
 
@@ -237,7 +299,7 @@ namespace BootstrapBlazor.Components
             }
         }
 
-        private void ToggleRow(SelectedItem item)
+        private Task ToggleRow(SelectedItem item, bool force = false)
         {
             if (!IsDisabled)
             {
@@ -252,8 +314,24 @@ namespace BootstrapBlazor.Components
 
                 SetValue();
 
+                if (Min > 0 || Max > 0)
+                {
+                    var validationContext = new ValidationContext(Value!) { MemberName = FieldIdentifier?.FieldName };
+                    var validationResults = new List<ValidationResult>();
+
+                    ValidateProperty(SelectedItems.Count, validationContext, validationResults);
+                    ToggleMessage(validationResults, true);
+                }
+
                 _ = TriggerSelectedItemChanged();
+
+                if (force)
+                {
+                    StateHasChanged();
+                }
             }
+
+            return Task.CompletedTask;
         }
 
         private async Task TriggerSelectedItemChanged()
@@ -268,17 +346,25 @@ namespace BootstrapBlazor.Components
             {
                 CurrentValueAsString = string.Join(",", SelectedItems.Select(i => i.Value));
             }
-            else if (typeValue.IsGenericType)
+            else if (typeValue.IsGenericType || typeValue.IsArray)
             {
-                var t = typeValue.GenericTypeArguments;
-                var instance = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(t))!;
+                var t = typeValue.IsGenericType ? typeValue.GenericTypeArguments[0] : typeValue.GetElementType()!;
+                var listType = typeof(List<>).MakeGenericType(t);
+                var instance = (IList)Activator.CreateInstance(listType, SelectedItems.Count)!;
 
                 foreach (var item in SelectedItems)
                 {
                     var val = item.Value;
-                    instance.Add(val);
+                    if (t.IsEnum && val != null)
+                    {
+                        instance.Add(Enum.Parse(t, val));
+                    }
+                    else
+                    {
+                        instance.Add(Convert.ChangeType(val, t));
+                    }
                 }
-                CurrentValue = (TValue)instance;
+                CurrentValue = (TValue)(typeValue.IsGenericType ? instance : listType.GetMethod("ToArray")!.Invoke(instance, null)!);
             }
         }
 
@@ -306,6 +392,26 @@ namespace BootstrapBlazor.Components
         }
 
         private bool GetCheckedState(SelectedItem item) => SelectedItems.Contains(item);
+
+        private bool CheckCanTrigger(SelectedItem item)
+        {
+            var ret = true;
+            if (Max > 0)
+            {
+                ret = SelectedItems.Count < Max || GetCheckedState(item);
+            }
+            return ret;
+        }
+
+        private bool CheckCanSelect(SelectedItem item)
+        {
+            var ret = GetCheckedState(item);
+            if (!ret)
+            {
+                ret = CheckCanTrigger(item);
+            }
+            return !ret;
+        }
 
         private string SearchText { get; set; } = "";
 

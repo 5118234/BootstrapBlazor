@@ -16,12 +16,12 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 获得/设置 相关弹窗实例
         /// </summary>
-        internal ModalBase? Dialog { get; set; }
+        internal Modal? Dialog { get; set; }
 
         /// <summary>
         /// 获得/设置 相关弹窗实例
         /// </summary>
-        internal ModalDialogBase? Body { get; set; }
+        internal ModalDialog? Body { get; set; }
 
         /// <summary>
         /// 获得/设置 模态弹窗返回值任务实例
@@ -91,15 +91,15 @@ namespace BootstrapBlazor.Components
         /// 将参数转换为组件属性方法
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<KeyValuePair<string, object>> ToAttributes() => new List<KeyValuePair<string, object>>
+        public IEnumerable<KeyValuePair<string, object?>> ToAttributes() => new List<KeyValuePair<string, object?>>
         {
-            new KeyValuePair<string, object>(nameof(ModalDialogBase.Title), Title),
-            new KeyValuePair<string, object>(nameof(ModalDialogBase.Size), Size.Medium),
-            new KeyValuePair<string, object>(nameof(ModalDialogBase.IsCentered), true),
-            new KeyValuePair<string, object>(nameof(ModalDialogBase.IsScrolling), false),
-            new KeyValuePair<string, object>(nameof(ModalDialogBase.ShowCloseButton), false),
-            new KeyValuePair<string, object>(nameof(ModalDialogBase.ShowFooter), false),
-            new KeyValuePair<string, object>(nameof(BodyContext), BodyContext!)
+            new(nameof(ModalDialog.Title), Title),
+            new(nameof(ModalDialog.Size), Size.Medium),
+            new(nameof(ModalDialog.IsCentered), true),
+            new(nameof(ModalDialog.IsScrolling), false),
+            new(nameof(ModalDialog.ShowCloseButton), false),
+            new(nameof(ModalDialog.ShowFooter), false),
+            new(nameof(BodyContext), BodyContext)
         };
 
         /// <summary>
@@ -110,16 +110,13 @@ namespace BootstrapBlazor.Components
         {
             if (Dialog != null)
             {
-                await Dialog.Toggle();
+                await Dialog.Close();
             }
 
-            if (Body != null && Body.OnClose != null)
+            if (IsConfirm)
             {
-                await Task.Delay(500);
-                await Body.OnClose();
+                ReturnTask.TrySetResult(returnValue);
             }
-
-            if (IsConfirm) ReturnTask.TrySetResult(returnValue);
         }
     }
 }

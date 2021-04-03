@@ -2,10 +2,13 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 // Website: https://www.blazor.zone or https://argozhang.github.io/
 
+using BootstrapBlazor.Components;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace BootstrapBlazor.Localization.Json
@@ -13,85 +16,110 @@ namespace BootstrapBlazor.Localization.Json
     /// <summary>
     /// IStringLocalizerFactory 实现类
     /// </summary>
-    internal class JsonStringLocalizerFactory : IStringLocalizerFactory
+    internal class JsonStringLocalizerFactory : ResourceManagerStringLocalizerFactory
     {
-        private readonly string _resourcesRelativePath;
+        private readonly JsonLocalizationOptions _jsonOptions;
         private readonly ILoggerFactory _loggerFactory;
+        private string? _typeName;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="localizationOptions"></param>
+        /// <param name="jsonOptions"></param>
+        /// <param name="resxOptions"></param>
+        /// <param name="options"></param>
         /// <param name="loggerFactory"></param>
-        public JsonStringLocalizerFactory(IOptions<JsonLocalizationOptions> localizationOptions, ILoggerFactory loggerFactory)
+        public JsonStringLocalizerFactory(IOptions<JsonLocalizationOptions> jsonOptions, IOptions<LocalizationOptions> resxOptions, IOptions<BootstrapBlazorOptions> options, ILoggerFactory loggerFactory) : base(resxOptions, loggerFactory)
         {
-            _resourcesRelativePath = localizationOptions.Value.ResourcesPath;
+            _jsonOptions = jsonOptions.Value;
+            _jsonOptions.FallbackCulture = options.Value.FallbackCultureName;
             _loggerFactory = loggerFactory;
         }
 
-        /// <summary>
-        /// 通过资源类型创建 IStringLocalizer 方法
-        /// </summary>
-        /// <param name="resourceSource"></param>
-        /// <returns></returns>
-        public IStringLocalizer Create(Type resourceSource)
+        protected override string GetResourcePrefix(TypeInfo typeInfo)
         {
-            var typeInfo = resourceSource.GetTypeInfo();
             var typeName = typeInfo.FullName;
-            if (string.IsNullOrEmpty(typeName)) throw new InvalidOperationException($"{nameof(resourceSource)} full name is null.");
-            var assemblyName = resourceSource.Assembly.GetName().Name;
+            if (string.IsNullOrEmpty(typeName))
+            {
+                throw new InvalidOperationException($"{nameof(typeInfo)} full name is null or String.Empty.");
+            }
 
-            if (resourceSource.IsGenericType)
+            if (typeInfo.IsGenericType)
             {
                 var index = typeName.IndexOf('`');
                 typeName = typeName.Substring(0, index);
             }
-            typeName = TryFixInnerClassPath(typeName);
-            return CreateJsonStringLocalizer(typeInfo.Assembly, typeName, $"{assemblyName}.{_resourcesRelativePath}");
+            _typeName = TryFixInnerClassPath(typeName);
+
+            return base.GetResourcePrefix(typeInfo);
         }
 
-        /// <summary>
-        /// 通过 baseName 与 location 创建 IStringLocalizer 方法
-        /// </summary>
-        /// <param name="baseName"></param>
-        /// <param name="location"></param>
-        /// <returns></returns>
-        public IStringLocalizer Create(string baseName, string location)
+        private const char InnerClassSeparator = '+';
+        private static string TryFixInnerClassPath(string path)
         {
-            baseName = TryFixInnerClassPath(baseName);
-
-            var assemblyName = new AssemblyName(location);
-            var assembly = Assembly.Load(assemblyName);
-            string? resourceName = null;
-
-            return CreateJsonStringLocalizer(assembly, string.Empty, resourceName);
-        }
-
-        /// <summary>
-        /// 创建 IStringLocalizer 实例方法
-        /// </summary>
-        /// <param name="assembly"></param>
-        /// <param name="typeName"></param>
-        /// <param name="resourceName"></param>
-        /// <returns></returns>
-        protected virtual IStringLocalizer CreateJsonStringLocalizer(Assembly assembly, string typeName, string? resourceName)
-        {
-            var logger = _loggerFactory.CreateLogger<JsonStringLocalizer>();
-
-            return new JsonStringLocalizer(assembly, resourceName, typeName, logger);
-        }
-
-        private string TryFixInnerClassPath(string path)
-        {
-            const char innerClassSeparator = '+';
             var fixedPath = path;
 
-            if (path.Contains(innerClassSeparator.ToString()))
+            if (path.Contains(InnerClassSeparator.ToString()))
             {
-                fixedPath = path.Replace(innerClassSeparator, '.');
+                fixedPath = path.Replace(InnerClassSeparator, '.');
             }
 
             return fixedPath;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="assembly"></param>
+        /// <param name="baseName"></param>
+        /// <returns></returns>
+        protected override ResourceManagerStringLocalizer CreateResourceManagerStringLocalizer(Assembly assembly, string baseName)
+        {
+            return new JsonStringLocalizer(this, assembly, _typeName ?? "", baseName, _loggerFactory.CreateLogger<JsonStringLocalizer>(), _jsonOptions);
+        }
+
+        /// <summary>
+        /// 获得 IResourceNamesCache 实例
+        /// </summary>
+        /// <returns></returns>
+        public IResourceNamesCache? GetCache()
+        {
+            var field = this.GetType().BaseType?.GetField("_resourceNamesCache", BindingFlags.NonPublic | BindingFlags.Instance);
+            return field?.GetValue(this) as IResourceNamesCache;
+        }
+
+        /// <summary>
+        /// 通过指定类型创建 IStringLocalizer 实例
+        /// </summary>
+        /// <typeparam name="TType"></typeparam>
+        /// <returns></returns>
+        public static IStringLocalizer? CreateLocalizer<TType>() => CreateLocalizer(typeof(TType));
+
+        /// <summary>
+        /// 通过指定类型创建 IStringLocalizer 实例
+        /// </summary>
+        /// <param name="resourceSource"></param>
+        /// <returns></returns>
+        public static IStringLocalizer? CreateLocalizer(Type resourceSource) => ServiceProviderHelper.ServiceProvider.GetRequiredService<IStringLocalizerFactory>().Create(resourceSource);
+
+        /// <summary>
+        /// 获取指定 Type 的资源文件
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="key"></param>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static bool TryGetLocalizerString(Type type, string key, [MaybeNullWhen(false)] out string? text)
+        {
+            var localizer = CreateLocalizer(type);
+            text = null;
+            var l = localizer?[key];
+            var ret = !(l?.ResourceNotFound ?? false);
+            if (ret)
+            {
+                text = l?.Value;
+            }
+            return ret;
         }
     }
 }

@@ -4,11 +4,10 @@
 
 using BootstrapBlazor.Components;
 using BootstrapBlazor.Shared;
-using BootstrapBlazor.Shared.Data;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.JSInterop;
-using System;
 using System.Globalization;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -31,7 +30,7 @@ namespace BootstrapBlazor.WebAssembly.ClientHost
 
             builder.RootComponents.Add<App>("app");
 
-            builder.Services.AddTransient(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+            builder.Services.AddTransient(sp => new HttpClient());
 
             // 版本号服务
             builder.Services.AddVersionManager();
@@ -47,27 +46,44 @@ namespace BootstrapBlazor.WebAssembly.ClientHost
 
             builder.Services.AddSingleton<WeatherForecastService>();
 
-            builder.Services.AddSingleton<WebsiteOptions>();
+            builder.Services.AddSingleton<IConfigureOptions<WebsiteOptions>, Microsoft.Extensions.DependencyInjection.ConfigureOptions<WebsiteOptions>>();
+
+            builder.Services.Configure<WebsiteOptions>(options =>
+            {
+                options.RepositoryUrl = "https://www.blazor.zone/api/docs/";
+            });
 
             builder.Services.AddSingleton<ICultureStorage, DefaultCultureStorage>();
 
-            builder.Services.Configure<BootstrapBlazorOptions>(op => op.ToastDelay = 4000);
+            builder.Services.Configure<BootstrapBlazorOptions>(op =>
+            {
+                op.ToastDelay = 4000;
+                op.SupportedCultures.AddRange(new string[] { "zh-CN", "en-US" });
+            });
+
+            builder.Services.AddLocalization();
 
             var host = builder.Build();
 
-            await GetCultureAsync(host);
+            await SetCultureAsync(host);
 
             await host.RunAsync();
         }
 
-        // based on https://github.com/pranavkm/LocSample
-        private static async Task GetCultureAsync(WebAssemblyHost host)
+        private static async Task SetCultureAsync(WebAssemblyHost host)
         {
+            // 如果 localStorage 未设置语言使用浏览器请求语言
             var jsRuntime = host.Services.GetRequiredService<IJSRuntime>();
-            var cultureName = await jsRuntime.InvokeAsync<string>("$.blazorCulture.get") ?? CultureInfo.CurrentCulture.Name;
-            var culture = new CultureInfo(cultureName);
-            CultureInfo.DefaultThreadCurrentCulture = culture;
-            CultureInfo.DefaultThreadCurrentUICulture = culture;
+            var cultureName = await jsRuntime.InvokeAsync<string>("$.blazorCulture.get");
+
+            if (!string.IsNullOrEmpty(cultureName))
+            {
+                var culture = new CultureInfo(cultureName);
+
+                // 注意 wasm 模式此处必须使用 DefaultThreadCurrentCulture 不可以使用 CurrentCulture
+                CultureInfo.DefaultThreadCurrentCulture = culture;
+                CultureInfo.DefaultThreadCurrentUICulture = culture;
+            }
         }
 
         internal class DefaultCultureStorage : ICultureStorage

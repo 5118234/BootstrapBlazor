@@ -88,17 +88,7 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 
         /// </summary>
-        protected new RenderFragment? BodyTemplate { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        protected new DynamicComponent? Component { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public IEnumerable<KeyValuePair<string, object>>? ComponentParamters { get; set; }
+        public IEnumerable<KeyValuePair<string, object?>>? ComponentParamters { get; set; }
 
         /// <summary>
         /// 获得/设置 模态弹窗返回值任务实例

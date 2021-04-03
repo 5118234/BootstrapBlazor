@@ -44,6 +44,11 @@ namespace BootstrapBlazor.Components
         protected List<TItem> SelectedItems { get; set; } = new List<TItem>();
 
         /// <summary>
+        /// 获得/设置 是否正在查询数据
+        /// </summary>
+        protected bool IsLoading { get; set; }
+
+        /// <summary>
         /// 获得 渲染模式
         /// </summary>
         protected TableRenderModel ActiveRenderModel => RenderModel switch
@@ -163,26 +168,36 @@ namespace BootstrapBlazor.Components
         [Parameter]
         public bool AutoGenerateColumns { get; set; }
 
+        /// <summary>
+        /// 获得/设置 查询时是否显示正在加载中动画 默认为 false
+        /// </summary>
+        [Parameter]
+        public bool ShowLoading { get; set; }
+
         [NotNull]
         private string? DataServiceInvalidOperationText { get; set; }
+
+        /// <summary>
+        /// 获得/设置 数据服务
+        /// </summary>
+        [Parameter]
+        public IDataService<TItem>? DataService { get; set; }
 
         /// <summary>
         /// 获得/设置 注入数据服务
         /// </summary>
         [Inject]
         [NotNull]
-        private IEnumerable<IDataService<TItem>>? DataServices { get; set; }
+        private IDataService<TItem>? InjectDataService { get; set; }
 
         private IDataService<TItem> GetDataService()
         {
-            if (DataServices.Any())
-            {
-                return DataServices.Last();
-            }
-            else
+            var ds = DataService ?? InjectDataService;
+            if (ds == null)
             {
                 throw new InvalidOperationException(DataServiceInvalidOperationText);
             }
+            return ds;
         }
 
         /// <summary>
@@ -236,6 +251,12 @@ namespace BootstrapBlazor.Components
         /// <returns></returns>
         public async Task QueryAsync()
         {
+            // 通知客户端开启遮罩
+            if (ShowLoading && !IsAutoRefresh)
+            {
+                IsLoading = true;
+                var _ = JSRuntime.InvokeVoidAsync(TableElement, "bb_table_load", "show");
+            }
             await QueryData();
             StateHasChanged();
         }
@@ -246,40 +267,66 @@ namespace BootstrapBlazor.Components
         protected async Task QueryData()
         {
             // https://gitee.com/LongbowEnterprise/BootstrapBlazor/issues/I29YK1
-            // TODO: 选中行目前不支持跨页
-            // 原因是选中行实例无法在翻页后保持
+            // 选中行目前不支持跨页 原因是选中行实例无法在翻页后保持
             SelectedItems.Clear();
 
             QueryData<TItem>? queryData = null;
+            var queryOption = new QueryPageOptions()
+            {
+                IsPage = IsPagination,
+                PageIndex = PageIndex,
+                PageItems = PageItems,
+                SearchText = SearchText,
+                SortOrder = SortOrder,
+                SortName = SortName,
+                Filters = Filters.Values,
+                Searchs = GetSearchs(),
+                SearchModel = SearchModel
+            };
             if (OnQueryAsync != null)
             {
-                queryData = await OnQueryAsync(new QueryPageOptions()
-                {
-                    PageIndex = PageIndex,
-                    PageItems = PageItems,
-                    SearchText = SearchText,
-                    SortOrder = SortOrder,
-                    SortName = SortName,
-                    Filters = Filters.Values,
-                    SearchModel = SearchModel
-                });
+                queryData = await OnQueryAsync(queryOption);
             }
             else if (UseInjectDataService)
             {
-                queryData = await GetDataService().QueryAsync(new QueryPageOptions()
-                {
-                    PageIndex = PageIndex,
-                    PageItems = PageItems,
-                    SearchText = SearchText,
-                    SortOrder = SortOrder,
-                    SortName = SortName,
-                    Filters = Filters.Values,
-                    SearchModel = SearchModel
-                });
+                queryData = await GetDataService().QueryAsync(queryOption);
             }
+
             if (queryData != null)
             {
                 Items = queryData.Items;
+                if (IsTree)
+                {
+                    KeySet.Clear();
+                    if (TableTreeNode<TItem>.HasKey)
+                    {
+                        CheckExpandKeys(TreeRows);
+                    }
+                    if (KeySet.Count > 0)
+                    {
+                        TreeRows = new List<TableTreeNode<TItem>>();
+                        foreach (var item in Items)
+                        {
+                            var node = new TableTreeNode<TItem>(item)
+                            {
+                                HasChildren = CheckTreeChildren(item),
+                            };
+                            node.IsExpand = node.HasChildren && node.Key != null && KeySet.Contains(node.Key);
+                            if (node.IsExpand)
+                            {
+                                await RestoreIsExpand(node);
+                            }
+                            TreeRows.Add(node);
+                        }
+                    }
+                    else
+                    {
+                        TreeRows = Items.Select(item => new TableTreeNode<TItem>(item)
+                        {
+                            HasChildren = CheckTreeChildren(item)
+                        }).ToList();
+                    }
+                }
                 TotalCount = queryData.TotalCount;
                 IsFiltered = queryData.IsFiltered;
                 IsSorted = queryData.IsSorted;
@@ -295,18 +342,55 @@ namespace BootstrapBlazor.Components
                 // 外部未处理排序，内部自行排序
                 if (!IsSorted && SortOrder != SortOrder.Unset && !string.IsNullOrEmpty(SortName))
                 {
-                    var invoker = SortLambdaCache.GetOrAdd(typeof(TItem), key => Items.GetSortLambda().Compile());
+                    var invoker = SortLambdaCache.GetOrAdd(typeof(TItem), key => LambdaExtensions.GetSortLambda<TItem>().Compile());
                     Items = invoker(Items, SortName, SortOrder);
                 }
             }
 
-            if (!IsRendered && SelectedRows != null)
+            if (SelectedRows != null)
             {
                 SelectedItems.AddRange(Items.Where(i => SelectedRows.Contains(i)));
             }
         }
 
-        private static readonly ConcurrentDictionary<Type, Func<IEnumerable<TItem>, string, SortOrder, IEnumerable<TItem>>> SortLambdaCache = new ConcurrentDictionary<Type, Func<IEnumerable<TItem>, string, SortOrder, IEnumerable<TItem>>>();
+        private HashSet<object> KeySet { get; } = new();
+
+        private void CheckExpandKeys(List<TableTreeNode<TItem>> tableTreeNodes)
+        {
+            foreach (var node in tableTreeNodes)
+            {
+                if (node.IsExpand && node.Key != null)
+                {
+                    KeySet.Add(node.Key);
+                }
+                CheckExpandKeys(node.Children);
+            }
+        }
+
+        private async Task RestoreIsExpand(TableTreeNode<TItem> parentNode)
+        {
+            if (OnTreeExpand == null)
+            {
+                throw new InvalidOperationException(NotSetOnTreeExpandErrorMessage);
+            }
+
+            foreach (var item in (await OnTreeExpand(parentNode.Value)))
+            {
+                var node = new TableTreeNode<TItem>(item)
+                {
+                    HasChildren = CheckTreeChildren(item),
+                    Parent = parentNode
+                };
+                node.IsExpand = node.HasChildren && node.Key != null && KeySet.Contains(node.Key);
+                if (node.IsExpand)
+                {
+                    await RestoreIsExpand(node);
+                }
+                parentNode.Children.Add(node);
+            }
+        }
+
+        private static readonly ConcurrentDictionary<Type, Func<IEnumerable<TItem>, string, SortOrder, IEnumerable<TItem>>> SortLambdaCache = new();
 
         private async Task ClickEditButton(TItem item)
         {

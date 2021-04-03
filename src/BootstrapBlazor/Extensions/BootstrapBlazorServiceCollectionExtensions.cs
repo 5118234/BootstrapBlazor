@@ -4,10 +4,9 @@
 
 using BootstrapBlazor.Components;
 using BootstrapBlazor.Localization.Json;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using System;
-using System.Globalization;
-using System.Linq;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -25,29 +24,23 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns></returns>
         public static IServiceCollection AddBootstrapBlazor(this IServiceCollection services, Action<BootstrapBlazorOptions>? configureOptions = null, Action<JsonLocalizationOptions>? setupAction = null)
         {
+            services.AddAuthorizationCore();
             services.AddJsonLocalization(setupAction);
-            services.AddSingleton<IComponentIdGenerator, DefaultIdGenerator>();
-            services.AddSingleton<ITableExcelExport, DefaultExcelExport>();
-            services.AddScoped<DialogService>();
-            services.AddScoped<MessageService>();
-            services.AddScoped<PopoverService>();
-            services.AddScoped<ToastService>();
-            services.AddScoped<SwalService>();
-            services.AddScoped<MenuTabBoundleOptions>();
-            services.AddSingleton<IConfigureOptions<BootstrapBlazorOptions>, ConfigureOptions<BootstrapBlazorOptions>>();
+            services.TryAddScoped<IComponentIdGenerator, DefaultIdGenerator>();
+            services.TryAddScoped<ITableExcelExport, DefaultExcelExport>();
+            services.TryAddScoped(typeof(IDataService<>), typeof(NullDataService<>));
+            services.TryAddScoped<DialogService>();
+            services.TryAddScoped<MessageService>();
+            services.TryAddScoped<PopoverService>();
+            services.TryAddScoped<ToastService>();
+            services.TryAddScoped<SwalService>();
+            services.TryAddScoped<TabItemTextOptions>();
+            services.TryAddSingleton<IConfigureOptions<BootstrapBlazorOptions>, ConfigureOptions<BootstrapBlazorOptions>>();
             services.Configure<BootstrapBlazorOptions>(options =>
             {
                 configureOptions?.Invoke(options);
-
-                // fix(#I2925C): https://gitee.com/LongbowEnterprise/BootstrapBlazor/issues/I2925C
-                if (CultureInfo.CurrentUICulture.Name == "en" || !options.SupportedCultures.Any(c => c.Equals(CultureInfo.CurrentUICulture.Name, StringComparison.OrdinalIgnoreCase)))
-                {
-                    CultureInfo.CurrentUICulture = new CultureInfo(options.DefaultUICultureInfoName ?? "en-US");
-                }
             });
-
             ServiceProviderHelper.RegisterService(services);
-
             return services;
         }
     }

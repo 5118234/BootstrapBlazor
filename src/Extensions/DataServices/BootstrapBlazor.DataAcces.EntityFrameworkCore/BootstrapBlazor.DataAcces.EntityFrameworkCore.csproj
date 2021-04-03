@@ -1,19 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-    <IsPackable>true</IsPackable>
-    <PackageIcon>logo.png</PackageIcon>
-    <Version>5.0.3</Version>
+    <Version>5.0.14-beta01</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BootstrapBlazor" Version="5.0.10" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="logo.png" Pack="true" PackagePath="" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.4" />
   </ItemGroup>
 
 </Project>

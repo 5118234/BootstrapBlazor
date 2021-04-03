@@ -2,11 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 // Website: https://www.blazor.zone or https://argozhang.github.io/
 
-using BootstrapBlazor.Components.EditorForm;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 
 namespace BootstrapBlazor.Components
 {
@@ -15,65 +11,6 @@ namespace BootstrapBlazor.Components
     /// </summary>
     public static class ObjectExtensions
     {
-        /// <summary>
-        /// 泛型 Clone 方法
-        /// </summary>
-        /// <typeparam name="TItem"></typeparam>
-        /// <param name="item"></param>
-        /// <returns></returns>
-        public static TItem Clone<TItem>(this TItem item)
-        {
-            var ret = item;
-            if (item != null)
-            {
-                var type = item.GetType();
-                if (typeof(ICloneable).IsAssignableFrom(type))
-                {
-                    var clv = type.GetMethod("Clone")?.Invoke(type, null);
-                    if (clv != null)
-                    {
-                        ret = (TItem)clv;
-                    }
-                }
-                if (type.IsClass)
-                {
-                    ret = Activator.CreateInstance<TItem>();
-                    var valType = ret?.GetType();
-                    if (valType != null)
-                    {
-                        // 20200608 tian_teng@outlook.com 支持字段和只读属性
-                        type.GetFields().ToList().ForEach(f =>
-                        {
-                            var v = f.GetValue(item);
-                            valType.GetField(f.Name)?.SetValue(ret, v);
-                        });
-                        type.GetProperties().ToList().ForEach(p =>
-                        {
-                            if (p.CanWrite)
-                            {
-                                var v = p.GetValue(item);
-                                valType.GetProperty(p.Name)?.SetValue(ret, v);
-                            }
-                        });
-                    }
-                }
-            }
-            return ret;
-        }
-
-        /// <summary>
-        /// 重置对象属性值到默认值方法
-        /// </summary>
-        /// <typeparam name="TItem"></typeparam>
-        public static void Reset<TItem>(this TItem source) where TItem : class, new()
-        {
-            var v = new TItem();
-            foreach (var pi in source.GetType().GetProperties())
-            {
-                pi.SetValue(source, v.GetType().GetProperty(pi.Name)!.GetValue(v));
-            }
-        }
-
         /// <summary>
         /// 转化为带单位的字符串 [% px] => [% px] [int] => [int]px
         /// </summary>
@@ -108,8 +45,7 @@ namespace BootstrapBlazor.Components
         public static bool IsNumber(this Type t)
         {
             var targetType = Nullable.GetUnderlyingType(t) ?? t;
-            var check = targetType == typeof(byte) ||
-                targetType == typeof(sbyte) ||
+            var check =
                 targetType == typeof(int) ||
                 targetType == typeof(long) ||
                 targetType == typeof(short) ||
@@ -148,30 +84,16 @@ namespace BootstrapBlazor.Components
         }
 
         /// <summary>
-        /// 增加扩展方法 List 转化为 字典集合
+        /// 格式化为 文件大小与单位格式 字符串
         /// </summary>
-        /// <typeparam name="TKey"></typeparam>
-        /// <typeparam name="TValue"></typeparam>
-        /// <param name="source"></param>
+        /// <param name="fileSize"></param>
         /// <returns></returns>
-        public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this List<KeyValuePair<TKey, TValue>> source)
-            where TKey : notnull
+        internal static string ToFileSizeString(this long fileSize) => fileSize switch
         {
-            return source.ToDictionary(key => key.Key, val => val.Value);
-        }
-
-        /// <summary>
-        /// 通过指定 Model 获得 IEditorItem 集合方法
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="predicate"></param>
-        /// <returns></returns>
-        public static IEnumerable<IEditorItem> GenerateColumns<TModel>(this TModel source, Func<PropertyInfo, bool>? predicate = null)
-            where TModel : class
-        {
-            var ret = new List<IEditorItem>(20);
-            if (predicate == null) predicate = p => true;
-            return source.GetType().GetProperties().Where(predicate).Select(p => new InternalEditorItem<TModel>(source, p)).ToList();
-        }
+            >= 1024 and < 1024 * 1024 => $"{Math.Round(fileSize / 1024D, 0, MidpointRounding.AwayFromZero)} KB",
+            >= 1024 * 1024 and < 1024 * 1024 * 1024 => $"{Math.Round(fileSize / 1024 / 1024D, 0, MidpointRounding.AwayFromZero)} MB",
+            >= 1024 * 1024 * 1024 => $"{Math.Round(fileSize / 1024 / 1024 / 1024D, 0, MidpointRounding.AwayFromZero)} GB",
+            _ => $"{fileSize} B"
+        };
     }
 }

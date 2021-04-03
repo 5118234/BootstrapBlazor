@@ -2,10 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 // Website: https://www.blazor.zone or https://argozhang.github.io/
 
-using Microsoft.AspNetCore.Components;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
 namespace BootstrapBlazor.Components
 {
     /// <summary>
@@ -18,7 +14,7 @@ namespace BootstrapBlazor.Components
         /// </summary>
         /// <param name="collapsed"></param>
         /// <returns></returns>
-        private string? GetButtonClassString(bool collapsed) => CssBuilder.Default("btn btn-link")
+        private static string? GetButtonClassString(bool collapsed) => CssBuilder.Default("btn btn-link")
             .AddClass("collapsed", collapsed)
             .Build();
 
@@ -27,7 +23,7 @@ namespace BootstrapBlazor.Components
         /// </summary>
         /// <param name="collpased"></param>
         /// <returns></returns>
-        private string? GetClassString(bool collpased) => CssBuilder.Default("collapse-item")
+        private static string? GetClassString(bool collpased) => CssBuilder.Default("collapse-item")
             .AddClass("collapse", collpased)
             .AddClass("collapse show", !collpased)
             .Build();

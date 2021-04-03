@@ -16,7 +16,10 @@
         highlight: function (el) {
             var $el = $(el);
             $el.find('[data-toggle="tooltip"]').tooltip();
-            hljs.highlightBlock($el.find('code')[0]);
+            var code = $el.find('code')[0];
+            if (code) {
+                hljs.highlightBlock(code);
+            }
         },
         copyText: function (ele) {
             if (navigator.clipboard) {
@@ -145,14 +148,6 @@
 
             $('.welcome-footer [data-toggle="tooltip"]').tooltip();
         },
-        block: function (el) {
-            var $el = $(el);
-            var id = $.getUID();
-            var $footer = $el.children('.card-footer-code');
-            var $footerBar = $el.children('.card-footer-control');
-            $footer.attr('id', id);
-            $footerBar.attr('href', '#' + id);
-        },
         table_wrap: function () {
             var handler = window.setInterval(function () {
                 var spans = $('body').find('.table-wrap-header-demo th .table-cell span');
@@ -179,6 +174,36 @@
 
                 obj.invokeMethodAsync(method, index);
             });
+        },
+        initTheme: function (el) {
+            var $el = $(el);
+
+            $el.on('click', '.btn-theme, .theme-close, .theme-item', function (e) {
+                var $theme = $el.find('.theme-list');
+                $theme.toggleClass('is-open').slideToggle('fade');
+            });
+        },
+        setTheme: function (css, cssList) {
+            var $link = $('link').filter(function (index, link) {
+                var href = $(link).attr('href');
+                return href === '_content/BootstrapBlazor/css/bootstrap.blazor.bundle.min.css';
+            });
+            var $targetLink = $link.next();
+            if ($link.length == 1) {
+                if (css === '') {
+                    // remove
+                    var $theme = cssList.filter(function (theme) {
+                        return $targetLink.attr('href') === theme;
+                    });
+                    if ($theme.length === 1) {
+                        $targetLink.remove();
+                    }
+                }
+                else {
+                    // append
+                    $link.after('<link rel="stylesheet" href="' + css + '">')
+                }
+            }
         }
     });
 
@@ -210,6 +235,27 @@
                     case 'stop':
                         $btnGroup.removeAttr('disabled');
                         break;
+                }
+            });
+
+        // MVP learn
+        $(document)
+            .on('click', '.btn-learn', function (e) {
+                var $button = $(this);
+                var $list = $button.prev();
+                $list.slideToggle('fade');
+            })
+            .on('click', '.btn-close', function (e) {
+                var $div = $('.ms-learn');
+                $div.fadeOut();
+            });
+
+        // Theme
+        $(document)
+            .on('click', function (e) {
+                var $el = $(e.target);
+                if ($el.closest('.theme').length == 0) {
+                    $('.theme-list.is-open').toggleClass('is-open').slideToggle('fade');
                 }
             });
     });

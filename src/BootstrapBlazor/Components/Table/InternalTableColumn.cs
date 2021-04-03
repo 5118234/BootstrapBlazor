@@ -3,12 +3,10 @@
 // Website: https://www.blazor.zone or https://argozhang.github.io/
 
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
-using System.Runtime;
 using System.Reflection;
 using System.Linq;
 
@@ -64,10 +62,24 @@ namespace BootstrapBlazor.Components
 
         public bool Readonly { get; set; }
 
+        public object? Step { get; set; }
+
+        public int Rows { get; set; }
+
         [NotNull]
         public string? Text { get; set; }
 
         public RenderFragment<object>? EditTemplate { get; set; }
+
+        /// <summary>
+        /// 获得/设置 组件类型 默认为 null
+        /// </summary>
+        public Type? ComponentType { get; set; }
+
+        /// <summary>
+        /// 获得/设置 额外数据源一般用于下拉框或者 CheckboxList 这种需要额外配置数据源组件使用
+        /// </summary>
+        public IEnumerable<SelectedItem>? Data { get; set; }
 
         public int Order { get; set; }
 
@@ -88,32 +100,46 @@ namespace BootstrapBlazor.Components
 
         public string GetFieldName() => FieldName;
 
-        public static void GetProperties<TModel>(List<ITableColumn> columns)
+        public static IEnumerable<ITableColumn> GetProperties<TModel>(IEnumerable<ITableColumn>? source = null)
         {
             var cols = new List<ITableColumn>(50);
             var type = typeof(TModel);
+            var attrModel = type.GetCustomAttribute<AutoGenerateClassAttribute>();
             var props = type.GetProperties();
             foreach (var prop in props)
             {
                 ITableColumn? tc;
                 var attr = prop.GetCustomAttribute<AutoGenerateColumnAttribute>();
+
+                // Issue: 增加定义设置标签 AutoGenerateClassAttribute
+                // https://gitee.com/LongbowEnterprise/BootstrapBlazor/issues/I381ED
+                var displayName = attr?.Text ?? Utility.GetDisplayName(type, prop.Name);
                 if (attr == null)
                 {
-                    tc = new InternalTableColumn(prop.Name, prop.PropertyType, type.GetDisplayName(prop.Name));
+                    tc = new InternalTableColumn(prop.Name, prop.PropertyType, displayName);
+
+                    if (attrModel != null)
+                    {
+                        InheritValue(attrModel, tc);
+                    }
                 }
                 else
                 {
                     if (attr.Ignore) continue;
 
-                    attr.Text = type.GetDisplayName(prop.Name);
+                    attr.Text = displayName;
                     attr.FieldName = prop.Name;
                     attr.PropertyType = prop.PropertyType;
 
+                    if (attrModel != null)
+                    {
+                        InheritValue(attrModel, attr);
+                    }
                     tc = attr;
                 }
 
                 // 替换属性 手写优先
-                var col = columns.FirstOrDefault(c => c.GetFieldName() == tc.GetFieldName());
+                var col = source?.FirstOrDefault(c => c.GetFieldName() == tc.GetFieldName());
                 if (col != null)
                 {
                     CopyValue(col, tc);
@@ -121,8 +147,27 @@ namespace BootstrapBlazor.Components
                 cols.Add(tc);
             }
 
-            columns.Clear();
-            columns.AddRange(cols.OrderBy(c => c.Order));
+            return cols.Where(a => a.Order > 0).OrderBy(a => a.Order)
+                .Concat(cols.Where(a => a.Order == 0))
+                .Concat(cols.Where(a => a.Order < 0).OrderBy(a => a.Order));
+        }
+
+        /// <summary>
+        /// 集成 class 标签中设置的参数值
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="dest"></param>
+        private static void InheritValue(AutoGenerateClassAttribute source, ITableColumn dest)
+        {
+            if (source.Align != Alignment.None) dest.Align = source.Align;
+            if (source.AllowTextWrap) dest.AllowTextWrap = source.AllowTextWrap;
+            if (source.Editable) dest.Editable = source.Editable;
+            if (source.Filterable) dest.Filterable = source.Filterable;
+            if (source.Readonly) dest.Readonly = source.Readonly;
+            if (source.Searchable) dest.Searchable = source.Searchable;
+            if (source.ShowTips) dest.ShowTips = source.ShowTips;
+            if (source.Sortable) dest.Sortable = source.Sortable;
+            if (source.TextEllipsis) dest.TextEllipsis = source.TextEllipsis;
         }
 
         /// <summary>
@@ -151,6 +196,7 @@ namespace BootstrapBlazor.Components
             if (source.ShowTips) dest.ShowTips = source.ShowTips;
             if (source.Sortable) dest.Sortable = source.Sortable;
             if (source.TextEllipsis) dest.TextEllipsis = source.TextEllipsis;
+            if (source.Data != null) dest.Data = source.Data;
             if (source.Template != null)
             {
                 if (dest is InternalTableColumn d) d.Template = source.Template;
@@ -158,6 +204,8 @@ namespace BootstrapBlazor.Components
             }
             if (source.Visible) dest.Visible = source.Visible;
             if (source.Width != null) dest.Width = source.Width;
+            if (!string.IsNullOrEmpty(source.Text)) dest.Text = source.Text;
+            if (source.Rows > 0) dest.Rows = source.Rows;
         }
     }
 }

@@ -3,7 +3,7 @@
 // Website: https://www.blazor.zone or https://argozhang.github.io/
 
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,10 +60,16 @@ namespace BootstrapBlazor.Components
         public bool ShowAdvancedSearch { get; set; } = true;
 
         /// <summary>
-        /// 获得/设置 搜索关键字
+        /// 获得/设置 是否显示清空搜索按钮 默认显示
         /// </summary>
         [Parameter]
-        public string SearchText { get; set; } = "";
+        public bool ShowResetSearch { get; set; } = true;
+
+        /// <summary>
+        /// 获得/设置 搜索关键字 通过列设置的 Searchable 自动生成搜索拉姆达表达式
+        /// </summary>
+        [Parameter]
+        public string? SearchText { get; set; }
 
         /// <summary>
         /// 重置搜索按钮异步回调方法
@@ -77,7 +83,7 @@ namespace BootstrapBlazor.Components
         protected async Task ResetSearchClick()
         {
             if (OnResetSearchAsync != null) await OnResetSearchAsync(SearchModel);
-            else if (SearchTemplate == null) SearchModel.Reset();
+            else if (SearchTemplate == null) Utility.Reset(SearchModel);
             await SearchClick();
         }
 
@@ -113,29 +119,43 @@ namespace BootstrapBlazor.Components
         }
 
         /// <summary>
+        /// 通过列集合中的 Searchable 列与 SearchText 拼装 IFilterAction 集合 
+        /// </summary>
+        /// <returns></returns>
+        protected IEnumerable<IFilterAction> GetSearchs()
+        {
+            var columns = Columns.Where(col => col.Searchable);
+
+            // 处理 SearchText
+            var searchs = new List<InternalSearchAction>();
+            if (!string.IsNullOrEmpty(SearchText))
+            {
+                searchs.AddRange(columns.Where(col => col.PropertyType == typeof(string)).Select(col => new InternalSearchAction() { FieldKey = col.GetFieldName(), Value = SearchText }));
+            }
+            return searchs;
+        }
+
+        /// <summary>
         /// 重置搜索按钮调用此方法
         /// </summary>
         protected async Task ClearSearchClick()
         {
-            SearchText = "";
+            SearchText = null;
             await ResetSearchClick();
         }
 
         /// <summary>
-        /// 搜索文本框按键回调方法
+        /// 客户端 SearchTextbox 文本框内按回车时调用此方法
         /// </summary>
-        /// <param name="e"></param>
-        protected async Task OnKeyUp(KeyboardEventArgs e)
-        {
-            // Enter Escape
-            if (e.Key == "Enter")
-            {
-                await SearchClick();
-            }
-            else if (e.Key == "Escape")
-            {
-                await ClearSearchClick();
-            }
-        }
+        /// <returns></returns>
+        [JSInvokable]
+        public async Task OnSearch() => await SearchClick();
+
+        /// <summary>
+        /// 客户端 SearchTextbox 文本框内按 ESC 时调用此方法
+        /// </summary>
+        /// <returns></returns>
+        [JSInvokable]
+        public async Task OnClearSearch() => await ClearSearchClick();
     }
 }

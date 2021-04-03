@@ -3,10 +3,8 @@
 // Website: https://www.blazor.zone or https://argozhang.github.io/
 
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.Extensions.Localization;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -18,21 +16,11 @@ namespace BootstrapBlazor.Components
     /// <summary>
     /// Tab 组件基类
     /// </summary>
-    public sealed partial class Tab
+    public sealed partial class Tab : BootstrapComponentBase
     {
-        static ConcurrentDictionary<string, Type> RouteTable { get; set; } = new ConcurrentDictionary<string, Type>();
-
-        /// <summary>
-        /// 
-        /// </summary>
         private bool FirstRender { get; set; } = true;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="item"></param>
-        /// <returns></returns>
-        private string? GetContentClassString(TabItem item) => CssBuilder.Default("tabs-body-content")
+        private static string? GetContentClassString(TabItem item) => CssBuilder.Default("tabs-body-content")
             .AddClass("d-none", !item.IsActive)
             .Build();
 
@@ -40,33 +28,17 @@ namespace BootstrapBlazor.Components
             .AddClass("extend", ShouldShowExtendButtons())
             .Build();
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="active"></param>
-        /// <returns></returns>
         private string? GetClassString(bool active) => CssBuilder.Default("tabs-item")
-            .AddClass("is-active", active)
+            .AddClass("active", active)
             .AddClass("is-closeable", ShowClose)
             .Build();
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="icon"></param>
-        /// <returns></returns>
-        private string? GetIconClassString(string icon) => CssBuilder.Default("fa fa-fw")
+        private static string? GetIconClassString(string icon) => CssBuilder.Default()
             .AddClass(icon)
             .Build();
 
-        /// <summary>
-        /// 获得/设置 Tab 组件 DOM 实例
-        /// </summary>
         private ElementReference TabElement { get; set; }
 
-        /// <summary>
-        /// 获得 Tab 组件样式
-        /// </summary>
         private string? ClassString => CssBuilder.Default("tabs")
             .AddClass("tabs-card", IsCard)
             .AddClass("tabs-border-card", IsBorderCard)
@@ -74,19 +46,21 @@ namespace BootstrapBlazor.Components
             .AddClassFromAttributes(AdditionalAttributes)
             .Build();
 
-        /// <summary>
-        /// 获得 Tab 组件 Style
-        /// </summary>
         private string? StyleString => CssBuilder.Default()
             .AddClass($"height: {Height}px;", Height > 0)
             .Build();
 
-        private readonly List<TabItem> _items = new List<TabItem>(50);
+        private readonly List<TabItem> _items = new(50);
 
         /// <summary>
         /// 获得/设置 TabItem 集合
         /// </summary>
         public IEnumerable<TabItem> Items => _items;
+
+        /// <summary>
+        /// 获得/设置 是否为排除地址 默认为 false
+        /// </summary>
+        private bool Excluded { get; set; }
 
         /// <summary>
         /// 获得/设置 是否为卡片样式
@@ -137,10 +111,28 @@ namespace BootstrapBlazor.Components
         public RenderFragment? ChildContent { get; set; }
 
         /// <summary>
+        /// 获得/设置 NotAuthorized 模板
+        /// </summary>
+        [Parameter]
+        public RenderFragment? NotAuthorized { get; set; }
+
+        /// <summary>
+        /// 获得/设置 TabItems 模板
+        /// </summary>
+        [Parameter]
+        public RenderFragment? Body { get; set; }
+
+        /// <summary>
         /// 获得/设置 Gets or sets a collection of additional assemblies that should be searched for components that can match URIs.
         /// </summary>
         [Parameter]
         public IEnumerable<Assembly>? AdditionalAssemblies { get; set; }
+
+        /// <summary>
+        /// 获得/设置 排除地址支持通配符
+        /// </summary>
+        [Parameter]
+        public IEnumerable<string>? ExcludeUrls { get; set; }
 
         /// <summary>
         /// 获得/设置 点击 TabItem 时回调方法
@@ -156,6 +148,13 @@ namespace BootstrapBlazor.Components
         public string? CloseCurrentTabText { get; set; }
 
         /// <summary>
+        /// 获得/设置 空白 Tab 显示文字
+        /// </summary>
+        [Parameter]
+        [NotNull]
+        public string? NullTabText { get; set; }
+
+        /// <summary>
         /// 获得/设置 关闭所有 TabItem 菜单文本
         /// </summary>
         [Parameter]
@@ -169,6 +168,12 @@ namespace BootstrapBlazor.Components
         [NotNull]
         public string? CloseOtherTabsText { get; set; }
 
+        /// <summary>
+        /// The resource to which access is being controlled.
+        /// </summary>
+        [Parameter]
+        public object? Resource { get; set; }
+
         [Inject]
         [NotNull]
         private IStringLocalizer<Tab>? Localizer { get; set; }
@@ -179,7 +184,7 @@ namespace BootstrapBlazor.Components
 
         [Inject]
         [NotNull]
-        private MenuTabBoundleOptions? Options { get; set; }
+        private TabItemTextOptions? Options { get; set; }
 
         /// <summary>
         /// OnInitializedAsync 方法
@@ -188,69 +193,74 @@ namespace BootstrapBlazor.Components
         {
             await base.OnInitializedAsync();
 
-            if (ShowExtendButtons) IsBorderCard = true;
+            if (ShowExtendButtons)
+            {
+                IsBorderCard = true;
+            }
 
             CloseOtherTabsText ??= Localizer[nameof(CloseOtherTabsText)];
             CloseAllTabsText ??= Localizer[nameof(CloseAllTabsText)];
             CloseCurrentTabText ??= Localizer[nameof(CloseCurrentTabText)];
+        }
 
+        /// <summary>
+        /// OnParametersSet 方法
+        /// </summary>
+        /// <returns></returns>
+        protected override void OnParametersSet()
+        {
             if (ClickTabToNavigation)
             {
-                await InitRouteTable();
+                AddTabByUrl(Navigator.Uri);
             }
         }
 
-        private async Task InitRouteTable()
+        private bool CheckUrl(string url)
         {
-            var apps = AdditionalAssemblies == null ? new[] { Assembly.GetEntryAssembly() } : new[] { Assembly.GetEntryAssembly() }.Concat(AdditionalAssemblies).Distinct();
-            var componentTypes = apps.SelectMany(a => a?.ExportedTypes.Where(t => typeof(IComponent).IsAssignableFrom(t)) ?? Array.Empty<Type>());
-
-            foreach (var componentType in componentTypes)
+            var ret = false;
+            foreach (var rule in ExcludeUrls ?? Enumerable.Empty<string>())
             {
-                var routeAttributes = componentType.GetCustomAttributes<RouteAttribute>(false);
-                foreach (var template in routeAttributes.Select(t => t.Template))
+                var checkUrl = rule;
+                var startIndex = rule.IndexOf("/*");
+                if (startIndex > 0)
                 {
-                    RouteTable.TryAdd(template.Trim('/'), componentType);
+                    checkUrl = rule.Substring(0, startIndex).Trim();
+                    if (url.StartsWith(checkUrl, StringComparison.OrdinalIgnoreCase))
+                    {
+                        ret = true;
+                        break;
+                    }
+                }
+                else
+                {
+                    if (url.Equals(checkUrl, StringComparison.OrdinalIgnoreCase))
+                    {
+                        ret = true;
+                        break;
+                    }
                 }
             }
-            Navigator.LocationChanged += Navigator_LocationChanged;
-
-            await InvokeAsync(() => AddTabByUrl(Navigator.ToBaseRelativePath(Navigator.Uri)));
-        }
-
-        private void Navigator_LocationChanged(object? sender, LocationChangedEventArgs e)
-        {
-            var requestUrl = Navigator.ToBaseRelativePath(e.Location);
-
-            var tab = Items.FirstOrDefault(tab => tab.Url == requestUrl);
-            if (tab != null)
-            {
-                ActiveTab(tab);
-            }
-            else
-            {
-                AddTabByUrl(requestUrl);
-            }
+            return ret;
         }
 
         private void AddTabByUrl(string url)
         {
-            if (RouteTable.TryGetValue(url, out var comp))
+            var requestUrl = Navigator.ToBaseRelativePath(url);
+
+            // 判断是否排除
+            Excluded = CheckUrl(requestUrl);
+
+            if (!Excluded)
             {
-                var item = new TabItem();
-                var parameters = new Dictionary<string, object>
+                var tab = Items.FirstOrDefault(tab => tab.Url?.Equals(requestUrl, StringComparison.OrdinalIgnoreCase) ?? false);
+                if (tab != null)
                 {
-                    [nameof(TabItem.Text)] = Options.TabItemText ?? string.Empty,
-                    [nameof(TabItem.Url)] = url,
-                    [nameof(TabItem.IsActive)] = true,
-                    [nameof(TabItem.ChildContent)] = new RenderFragment(builder =>
-                    {
-                        builder.OpenComponent(0, comp);
-                        builder.CloseComponent();
-                    })
-                };
-                var _ = item.SetParametersAsync(ParameterView.FromDictionary(parameters));
-                Add(item);
+                    ActiveTabItem(tab);
+                }
+                else
+                {
+                    AddTabItem(requestUrl);
+                }
             }
         }
 
@@ -262,7 +272,10 @@ namespace BootstrapBlazor.Components
         {
             await base.OnAfterRenderAsync(firstRender);
 
-            FirstRender = false;
+            if (firstRender)
+            {
+                FirstRender = false;
+            }
 
             await JSRuntime.InvokeVoidAsync(TabElement, "bb_tab");
         }
@@ -275,14 +288,22 @@ namespace BootstrapBlazor.Components
         private async Task OnClickTabItem(TabItem item)
         {
             Items.ToList().ForEach(i => i.SetActive(false));
-            if (OnClickTab != null) await OnClickTab(item);
-            if (!ClickTabToNavigation) item.SetActive(true);
+            if (OnClickTab != null)
+            {
+                await OnClickTab(item);
+            }
+
+            if (!ClickTabToNavigation)
+            {
+                item.SetActive(true);
+                StateHasChanged();
+            }
         }
 
         /// <summary>
-        /// 点击上一个标签页时回调此方法
+        /// 切换到上一个标签方法
         /// </summary>
-        private void ClickPrevTab()
+        public Task ClickPrevTab()
         {
             var item = Items.FirstOrDefault(i => i.IsActive);
             if (item != null)
@@ -291,8 +312,15 @@ namespace BootstrapBlazor.Components
                 if (index > -1)
                 {
                     index--;
-                    if (index < 0) index = _items.Count - 1;
-                    if (!ClickTabToNavigation) item.SetActive(false);
+                    if (index < 0)
+                    {
+                        index = _items.Count - 1;
+                    }
+
+                    if (!ClickTabToNavigation)
+                    {
+                        item.SetActive(false);
+                    }
 
                     item = Items.ElementAt(index);
                     if (ClickTabToNavigation)
@@ -302,15 +330,17 @@ namespace BootstrapBlazor.Components
                     else
                     {
                         item.SetActive(true);
+                        StateHasChanged();
                     }
                 }
             }
+            return Task.CompletedTask;
         }
 
         /// <summary>
-        /// 点击下一个标签页时回调此方法
+        /// 切换到下一个标签方法
         /// </summary>
-        private void ClickNextTab()
+        public Task ClickNextTab()
         {
             var item = Items.FirstOrDefault(i => i.IsActive);
             if (item != null)
@@ -318,10 +348,17 @@ namespace BootstrapBlazor.Components
                 var index = _items.IndexOf(item);
                 if (index < _items.Count)
                 {
-                    if (!ClickTabToNavigation) item.SetActive(false);
+                    if (!ClickTabToNavigation)
+                    {
+                        item.SetActive(false);
+                    }
 
                     index++;
-                    if (index + 1 > _items.Count) index = 0;
+                    if (index + 1 > _items.Count)
+                    {
+                        index = 0;
+                    }
+
                     item = Items.ElementAt(index);
 
                     if (ClickTabToNavigation)
@@ -331,32 +368,38 @@ namespace BootstrapBlazor.Components
                     else
                     {
                         item.SetActive(true);
+                        StateHasChanged();
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// 关闭所有标签页方法
-        /// </summary>
-        private void CloseAllTabs()
-        {
-            _items.RemoveAll(t => t.Closable);
+            return Task.CompletedTask;
         }
 
         /// <summary>
         /// 关闭当前标签页方法
         /// </summary>
-        private void CloseCurrentTab()
+        public Task CloseCurrentTab()
         {
             var tab = _items.FirstOrDefault(t => t.IsActive);
-            if (tab != null && tab.Closable) Remove(tab);
+            if (tab != null && tab.Closable)
+            {
+                RemoveTab(tab);
+            }
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// 关闭所有标签页方法
+        /// </summary>
+        public void CloseAllTabs()
+        {
+            _items.RemoveAll(t => t.Closable);
         }
 
         /// <summary>
         /// 关闭其他标签页方法
         /// </summary>
-        private void CloseOtherTabs()
+        public void CloseOtherTabs()
         {
             _items.RemoveAll(t => t.Closable && !t.IsActive);
         }
@@ -368,38 +411,89 @@ namespace BootstrapBlazor.Components
         internal void AddItem(TabItem item) => _items.Add(item);
 
         /// <summary>
-        /// 添加 TabItem 方法
+        /// 通过 Url 添加 TabItem 标签方法
         /// </summary>
-        /// <param name="item"></param>
-        public void Add(TabItem item)
+        /// <param name="url"></param>
+        /// <param name="text"></param>
+        /// <param name="icon"></param>
+        /// <param name="active"></param>
+        /// <param name="closable"></param>
+        public void AddTab(string url, string text, string? icon = null, bool active = true, bool closable = true)
         {
-            var check = _items.Contains(item);
-            if (item.IsActive || !check) _items.ForEach(i => i.SetActive(false));
-            if (!check)
-            {
-                _items.Add(item);
-                item.SetActive(true);
-            }
+            AddTabItem(url, text, icon, active, closable);
+
             StateHasChanged();
+        }
+
+        private readonly HashSet<Assembly> _assemblies = new();
+        private void AddTabItem(string url, string? text = null, string? icon = null, bool? active = null, bool? closable = null)
+        {
+            var context = RouteTableFactory.Create(AdditionalAssemblies!, url);
+            if (context.Handler != null)
+            {
+                text ??= Options.Text;
+                icon ??= Options.Icon ?? string.Empty;
+                active ??= Options.IsActive ?? true;
+                closable ??= Options.Closable ?? true;
+                Options.Reset();
+
+                AddTabItem(new Dictionary<string, object?>
+                {
+                    [nameof(TabItem.Text)] = GetTabText(text, context.Segments),
+                    [nameof(TabItem.Url)] = url,
+                    [nameof(TabItem.Icon)] = icon,
+                    [nameof(TabItem.Closable)] = closable,
+                    [nameof(TabItem.IsActive)] = active,
+                    [nameof(TabItem.ChildContent)] = new RenderFragment(builder =>
+                    {
+                        builder.OpenComponent<TabAuthorizeView>(0);
+                        builder.AddAttribute(1, nameof(TabAuthorizeView.RouteContext), context);
+                        builder.AddAttribute(2, nameof(TabAuthorizeView.NotAuthorized), NotAuthorized);
+                        builder.CloseComponent();
+                    })
+                });
+            }
+        }
+
+        private string GetTabText(string? text, string[]? segments)
+        {
+            if (NullTabText == null)
+            {
+                var t = Localizer[nameof(NullTabText)];
+                if (!t.ResourceNotFound)
+                {
+                    NullTabText = t.Value;
+                }
+            }
+            return text ?? NullTabText ?? segments?.FirstOrDefault() ?? "";
         }
 
         /// <summary>
         /// 添加 TabItem 方法
         /// </summary>
         /// <param name="parameters"></param>
-        public void Add(Dictionary<string, object> parameters)
+        public void AddTab(Dictionary<string, object?> parameters)
+        {
+            AddTabItem(parameters);
+            StateHasChanged();
+        }
+
+        private void AddTabItem(Dictionary<string, object?> parameters)
         {
             var item = TabItem.Create(parameters);
-            if (item.IsActive) _items.ForEach(i => i.SetActive(false));
+            if (item.IsActive)
+            {
+                _items.ForEach(i => i.SetActive(false));
+            }
+
             _items.Add(item);
-            StateHasChanged();
         }
 
         /// <summary>
         /// 移除 TabItem 方法
         /// </summary>
         /// <param name="item"></param>
-        public void Remove(TabItem item)
+        public void RemoveTab(TabItem item)
         {
             var index = _items.IndexOf(item);
             _items.Remove(item);
@@ -419,8 +513,20 @@ namespace BootstrapBlazor.Components
                 }
                 if (activeItem != null)
                 {
-                    if (ClickTabToNavigation) Navigator.NavigateTo(activeItem.Url!);
-                    else activeItem.SetActive(true);
+                    if (ClickTabToNavigation)
+                    {
+                        Navigator.NavigateTo(activeItem.Url!);
+                    }
+                    else
+                    {
+                        activeItem.SetActive(true);
+                        StateHasChanged();
+                    }
+                }
+                else
+                {
+                    // 无标签
+                    StateHasChanged();
                 }
             }
         }
@@ -431,24 +537,15 @@ namespace BootstrapBlazor.Components
         /// <param name="item"></param>
         public void ActiveTab(TabItem item)
         {
-            _items.ForEach(i => i.SetActive(false));
-            item.SetActive(true);
+            ActiveTabItem(item);
 
             StateHasChanged();
         }
 
-        /// <summary>
-        /// Dispose 方法
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
+        private void ActiveTabItem(TabItem item)
         {
-            if (disposing)
-            {
-                if (ClickTabToNavigation) Navigator.LocationChanged -= Navigator_LocationChanged;
-            }
-
-            base.Dispose(disposing);
+            _items.ForEach(i => i.SetActive(false));
+            item.SetActive(true);
         }
     }
 }

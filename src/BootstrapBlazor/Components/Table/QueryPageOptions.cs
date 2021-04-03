@@ -23,6 +23,11 @@ namespace BootstrapBlazor.Components
         public string? SearchText { get; set; }
 
         /// <summary>
+        /// 获得/设置 搜索条件集合
+        /// </summary>
+        public IEnumerable<IFilterAction> Searchs { get; set; } = Enumerable.Empty<IFilterAction>();
+
+        /// <summary>
         /// 获得/设置 排序字段名称
         /// </summary>
         public string? SortName { get; set; }
@@ -51,5 +56,10 @@ namespace BootstrapBlazor.Components
         /// 获得/设置 每页条目数量
         /// </summary>
         public int PageItems { get; set; } = DefaultPageItems;
+
+        /// <summary>
+        /// 获得/设置 是否是分页查询 默认为 false
+        /// </summary>
+        public bool IsPage { get; set; }
     }
 }

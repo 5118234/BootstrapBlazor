@@ -4,30 +4,40 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Diagnostics.CodeAnalysis;
 
 namespace BootstrapBlazor.Components
 {
     /// <summary>
-    /// 
+    /// ServiceProviderHelper 注入服务扩展类
     /// </summary>
-    internal static class ServiceProviderHelper
+    public static class ServiceProviderHelper
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        public static ServiceProvider ServiceProvider { get { return _lazy.Value; } }
+        private static IServiceProvider? _provider;
 
-        [NotNull]
-        private static Lazy<ServiceProvider>? _lazy;
+        private static IServiceProvider? _providerRoot;
+
+        private static IServiceProvider? _serviceProvider;
+
+        private static IServiceCollection? _service;
+
+        internal static void RegisterProvider(IServiceProvider provider) => _provider = provider;
+
+        internal static void RegisterProviderRoot(IServiceProvider provider) => _providerRoot = provider;
+
+        internal static void RegisterService(IServiceCollection services) => _service = services;
 
         /// <summary>
-        /// 
+        /// 获取系统 IServiceProvider 接口
         /// </summary>
-        /// <param name="services"></param>
-        public static void RegisterService(IServiceCollection services)
+        public static IServiceProvider ServiceProvider => _providerRoot ?? _provider ?? CreateProvider();
+
+        private static IServiceProvider CreateProvider()
         {
-            _lazy = new Lazy<ServiceProvider>(() => services.BuildServiceProvider());
+            if (_serviceProvider == null)
+            {
+                _serviceProvider = _service.BuildServiceProvider();
+            }
+            return _serviceProvider;
         }
     }
 }

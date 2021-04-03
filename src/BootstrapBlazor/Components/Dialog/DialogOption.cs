@@ -5,6 +5,7 @@
 using Microsoft.AspNetCore.Components;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
 namespace BootstrapBlazor.Components
@@ -17,7 +18,8 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 获得/设置 相关弹窗实例
         /// </summary>
-        public ModalBase? Dialog { get; internal set; }
+        [NotNull]
+        public Modal? Dialog { get; internal set; }
 
         /// <summary>
         /// 获得/设置 弹窗标题
@@ -67,7 +69,7 @@ namespace BootstrapBlazor.Components
         /// <summary>
         /// 获得/设置 自定义组件
         /// </summary>
-        public DynamicComponent? Component { get; set; }
+        public BootstrapDynamicComponent? Component { get; set; }
 
         /// <summary>
         /// 获得/设置 关闭弹窗回调方法
@@ -78,18 +80,15 @@ namespace BootstrapBlazor.Components
         /// 将参数转换为组件属性方法
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<KeyValuePair<string, object>> ToAttributes()
+        public IEnumerable<KeyValuePair<string, object?>> ToAttributes() => new KeyValuePair<string, object?>[]
         {
-            return new KeyValuePair<string, object>[]
-            {
-                new KeyValuePair<string, object>(nameof(Title), Title!),
-                new KeyValuePair<string, object>(nameof(Size), Size),
-                new KeyValuePair<string, object>(nameof(IsCentered), IsCentered),
-                new KeyValuePair<string, object>(nameof(IsScrolling), IsScrolling),
-                new KeyValuePair<string, object>(nameof(ShowCloseButton), ShowCloseButton),
-                new KeyValuePair<string, object>(nameof(ShowFooter), ShowFooter),
-                new KeyValuePair<string, object>(nameof(BodyContext), BodyContext!),
-            };
-        }
+            new(nameof(Title), Title!),
+            new(nameof(Size), Size),
+            new(nameof(IsCentered), IsCentered),
+            new(nameof(IsScrolling), IsScrolling),
+            new(nameof(ShowCloseButton), ShowCloseButton),
+            new(nameof(ShowFooter), ShowFooter),
+            new(nameof(BodyContext), BodyContext!),
+        };
     }
 }

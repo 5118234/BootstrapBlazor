@@ -123,7 +123,7 @@ namespace BootstrapBlazor.Components
             if (firstRender)
             {
                 Interop = new JSInterop<TableFilter>(JSRuntime);
-                await Interop.Invoke(this, FilterElement, "bb_filter", nameof(Close));
+                await Interop.InvokeVoidAsync(this, FilterElement, "bb_filter", nameof(Close));
             }
         }
 
@@ -156,11 +156,11 @@ namespace BootstrapBlazor.Components
         /// 客户端 JS 回车按键事件调用
         /// </summary>
         [JSInvokable]
-        public void ConfirmByKey()
+        public async Task ConfirmByKey()
         {
             if (IsShow)
             {
-                OnClickConfirm();
+                await OnClickConfirm();
             }
         }
 
@@ -168,11 +168,11 @@ namespace BootstrapBlazor.Components
         /// 客户端 JS ESC 按键事件调用
         /// </summary>
         [JSInvokable]
-        public void EscByKey()
+        public async Task EscByKey()
         {
             if (IsShow)
             {
-                OnClickReset();
+                await OnClickReset();
             }
         }
 
@@ -180,16 +180,19 @@ namespace BootstrapBlazor.Components
         /// 点击重置按钮时回调此方法
         /// </summary>
         /// <returns></returns>
-        private void OnClickReset()
+        private async Task OnClickReset()
         {
             if (IsShow)
             {
                 IsShow = false;
                 Count = 0;
 
-                Table?.Filters.Remove(FieldKey);
-                FilterAction?.Reset();
-                Table?.OnFilterAsync?.Invoke();
+                if (Table != null)
+                {
+                    Table.Filters.Remove(FieldKey);
+                    FilterAction?.Reset();
+                    if (Table.OnFilterAsync != null) await Table.OnFilterAsync();
+                }
             }
         }
 
@@ -197,16 +200,27 @@ namespace BootstrapBlazor.Components
         /// 点击确认时回调此方法
         /// </summary>
         /// <returns></returns>
-        private void OnClickConfirm()
+        private async Task OnClickConfirm()
         {
             if (IsShow)
             {
                 IsShow = false;
 
-                if (Table != null && (FilterAction?.GetFilterConditions().Any() ?? false))
+                if (Table != null)
                 {
-                    Table.Filters[FieldKey] = FilterAction;
-                    Table.OnFilterAsync?.Invoke();
+                    if (FilterAction?.GetFilterConditions().Any() ?? false)
+                    {
+                        Table.Filters[FieldKey] = FilterAction;
+                    }
+                    else
+                    {
+                        Table.Filters.Remove(FieldKey);
+                    }
+
+                    if (Table.OnFilterAsync != null)
+                    {
+                        await Table.OnFilterAsync();
+                    }
                 }
             }
         }

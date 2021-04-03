@@ -104,7 +104,7 @@ namespace BootstrapBlazor.Components
 
                 var ds = await OnInit.Invoke();
 
-                Interop?.Invoke(this, ChartElement, "chart", nameof(Completed), ds, "", ChartType.ToDescriptionString());
+                await Interop.InvokeVoidAsync(this, ChartElement, "chart", nameof(Completed), ds, "", ChartType.ToDescriptionString());
             }
         }
 
@@ -131,7 +131,10 @@ namespace BootstrapBlazor.Components
             if (OnInit != null)
             {
                 var ds = await OnInit.Invoke();
-                Interop?.Invoke(this, ChartElement, "chart", nameof(Completed), ds, method, ChartType.ToDescriptionString(), Angle);
+                if (Interop != null)
+                {
+                    await Interop.InvokeVoidAsync(this, ChartElement, "chart", nameof(Completed), ds, method, ChartType.ToDescriptionString(), Angle);
+                }
             }
         }
 
